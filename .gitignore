@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Build output
+client/dist/
+
+# Environment & secrets
+.env
+*.pem
+*.key
+*.pfx
+*.der
+
+# Excel data files
+*.xlsx
+!package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
