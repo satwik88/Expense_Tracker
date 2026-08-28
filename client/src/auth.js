@@ -42,7 +42,7 @@ export const AUTH = {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       allowCredentials: [{
         type: stored.type,
-        id: atob(stored.rawId),
+        id: new Uint8Array(atob(stored.rawId).split('').map(c => c.charCodeAt(0))),
         transports: ['internal']
       }],
       timeout: 60000

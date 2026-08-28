@@ -1,20 +1,9 @@
 {
-  "type": "module",
   "name": "money-tracker",
-  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "node server/index.js",
-    "client": "npm run dev --prefix client",
-    "install:all": "npm install && npm install --prefix client"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "exceljs": "^4.4.0",
-    "express": "^4.21.0"
-  },
-  "devDependencies": {
-    "concurrently": "^10.0.5"
+    "dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "preview": "npm run preview --prefix client"
   }
 }
