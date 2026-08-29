@@ -45,11 +45,12 @@ export const AUTH = {
   },
 
   async setupBiometric() {
-    const { auth, errorCode } = await getPlugin()
+    const { auth } = await getPlugin()
     if (auth) {
-      const result = await auth.authenticate({
+      const result = await auth.register({
         reason: 'Set up biometric unlock',
         title: 'Biometric Setup',
+        subtitle: 'Enroll your fingerprint or face',
         fallbackTitle: 'Use PIN instead',
       })
       if (!result.success) {

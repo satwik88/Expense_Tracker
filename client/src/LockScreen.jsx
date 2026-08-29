@@ -27,7 +27,7 @@ const DeleteIcon = () => (
   </svg>
 )
 
-export default function LockScreen({ onUnlock, onTryChangePin }) {
+export default function LockScreen({ onUnlock }) {
   const hasPin = AUTH.isPinEnabled()
   const hasBiometric = AUTH.isBiometricEnabled()
 
@@ -176,13 +176,6 @@ export default function LockScreen({ onUnlock, onTryChangePin }) {
         {pinMode === 'confirm-pin' && (
           <button className="pin-toggle" onClick={() => { setPinMode('setup'); setPinConfirm(''); setPinError('') }}>
             ← Back
-          </button>
-        )}
-
-        {/* Change PIN link — always shown when PIN is set */}
-        {hasPin && onTryChangePin && (
-          <button className="pin-toggle" onClick={onTryChangePin}>
-            Change PIN
           </button>
         )}
 

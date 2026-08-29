@@ -348,7 +348,7 @@ export default function App() {
   }
 
   // Lock guard — show lock screen if user has enabled app lock
-  if (!unlocked && AUTH.isLockEnabled()) return <LockScreen onUnlock={() => setUnlocked(true)} onTryChangePin={() => { setProfileOpen(true); setChangePinMode('check'); setChangePinOld(''); setChangePinNew(''); setChangePinNewConfirm(''); setChangePinError(''); }} />
+  if (!unlocked && AUTH.isLockEnabled()) return <LockScreen onUnlock={() => setUnlocked(true)} />
 
   return (
     <div className="app">
