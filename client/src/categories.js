@@ -77,7 +77,6 @@ const RAW = [
   // Personal / name-included
   { fn: (n) => `${n} returns!` },
   { fn: (n) => `Back at it, ${n}` },
-  { fn: (n) => `Back at it! Coffee and Claude time?` },
   { fn: (n) => `Greetings, ${n}` },
   { fn: (n) => `Hey there, ${n}` },
   { fn: (n) => `Hi ${n}, how are you?` },

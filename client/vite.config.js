@@ -12,9 +12,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
-    https: {
-      key: fs.readFileSync(join(SSL_DIR, 'key.pem')),
-      cert: fs.readFileSync(join(SSL_DIR, 'cert.pem'))
-    }
+    https: process.env.NODE_ENV !== 'production'
+      ? {
+          key: fs.readFileSync(join(SSL_DIR, 'key.pem')),
+          cert: fs.readFileSync(join(SSL_DIR, 'cert.pem'))
+        }
+      : undefined
   }
 })

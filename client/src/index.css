@@ -1,4 +1,6 @@
 /* ── Reset & Base ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 :root {
@@ -25,75 +27,179 @@
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
   min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
 }
 
+/* ── App Shell ── */
+.app { max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
+
 /* ── Lock Screen ── */
 .lock-screen {
   position: fixed; inset: 0;
-  background: var(--card-dk);
+  background: transparent;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   z-index: 1000; padding: 24px;
 }
+.lock-card {
+  background: #000;
+  border-radius: 2rem;
+  padding: 2rem;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
 .lock-icon-wrap {
-  width: 80px; height: 80px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.15);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; margin-bottom: 20px;
-}
-.lock-title { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
-.lock-subtitle { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 32px; }
-.biometric-btn {
-  width: 64px; height: 64px; border-radius: 50%;
+  width: 4rem; height: 4rem; border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.06);
-  color: #fff; font-size: 1.6rem;
-  cursor: pointer; transition: all 0.2s;
   display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.5rem;
+  background: #000;
 }
-.biometric-btn:active { transform: scale(0.92); }
-.biometric-btn:disabled { opacity: 0.4; }
-.biometric-label { margin-top: 10px; font-size: 0.78rem; color: rgba(255,255,255,0.5); text-align: center; }
-.pin-dots { display: flex; justify-content: center; gap: 14px; margin-bottom: 20px; }
+.lock-icon-wrap svg { width: 1.75rem; height: 1.75rem; color: #fff; }
+.lock-title { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem; letter-spacing: -0.02em; }
+.lock-subtitle { font-size: 0.875rem; color: rgba(255,255,255,0.9); margin-bottom: 0.5rem; }
+.pin-helper-text {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+.pin-dots { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
 .pin-dot {
-  width: 12px; height: 12px; border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.25);
+  width: 0.75rem; height: 0.75rem; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
   transition: all 0.15s;
 }
 .pin-dot.filled { background: #fff; border-color: #fff; }
 .pin-dot.error { background: #fff; border-color: #fff; animation: shake 0.4s ease; }
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
-.pin-keypad { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; max-width: 200px; margin: 0 auto; }
+.pin-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 4rem);
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
 .pin-key {
-  width: 60px; height: 60px; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.06);
-  color: #fff; font-size: 1.2rem; font-weight: 600;
-  cursor: pointer; transition: background 0.15s;
+  width: 4rem; height: 4rem; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: #fff; font-size: 1.25rem; font-weight: 500;
+  cursor: pointer; transition: all 0.15s;
   display: flex; align-items: center; justify-content: center;
 }
-.pin-key:active { background: rgba(255,255,255,0.15); }
-.pin-key.clear { font-size: 0.7rem; color: rgba(255,255,255,0.5); }
-.pin-key.confirm { font-size: 0.7rem; color: #fff; }
-.pin-toggle { margin-top: 20px; background: none; border: none; color: rgba(255,255,255,0.4); font-size: 0.8rem; cursor: pointer; text-decoration: underline; }
-.pin-error { color: rgba(255,255,255,0.6); font-size: 0.78rem; min-height: 1.2em; text-align: center; margin-bottom: 8px; }
+.pin-key:hover { background: rgba(255,255,255,0.1); }
+.pin-key:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
+.pin-key.clear { font-size: 1rem; color: rgba(255,255,255,0.7); padding: 0; }
+.pin-key.clear svg { width: 1.25rem; height: 1.25rem; }
+.pin-key.confirm {
+  font-size: 0.875rem; font-weight: 700; color: rgba(255,255,255,0.9);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.pin-biometric-row { display: flex; justify-content: center; margin-top: 1.5rem; }
+.pin-biometric-btn {
+  width: 3.5rem; height: 3.5rem; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.pin-biometric-btn:hover { background: rgba(255,255,255,0.1); }
+.pin-biometric-btn:active { background: rgba(255,255,255,0.2); transform: scale(0.95); }
+.pin-biometric-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pin-biometric-btn svg { width: 1.5rem; height: 1.5rem; }
+.pin-toggle {
+  margin-top: 1.5rem;
+  background: none; border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.75rem; font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s;
+}
+.pin-toggle:hover { color: rgba(255,255,255,0.7); }
+.pin-error { color: rgba(255,255,255,0.6); font-size: 0.75rem; min-height: 1.2em; text-align: center; margin-bottom: 0.5rem; }
 
-/* ── App Shell ── */
-.app { max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
-.app.locked { display: none; }
+/* Biometric-only view */
+.biometric-btn {
+  width: 4rem; height: 4rem; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: #fff; font-size: 1.5rem;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.biometric-btn:hover { background: rgba(255,255,255,0.1); }
+.biometric-btn:active { transform: scale(0.95); }
+.biometric-btn:disabled { opacity: 0.4; }
+.biometric-label { margin-top: 0.75rem; font-size: 0.75rem; color: rgba(255,255,255,0.5); text-align: center; }
+
+/* Light-background PIN keypad (used inside settings modal) */
+.pin-pad-light .pin-dots { gap: 10px; margin-bottom: 14px; }
+.pin-pad-light .pin-dot {
+  width: 14px; height: 14px;
+  border: 2px solid var(--border);
+  background: transparent;
+}
+.pin-pad-light .pin-dot.filled { background: var(--text); border-color: var(--text); }
+.pin-pad-light .pin-helper-text {
+  font-size: 0.72rem; color: var(--muted); margin-bottom: 12px;
+  text-align: center;
+}
+.pin-pad-light .pin-error { color: var(--red); font-size: 0.78rem; min-height: 1.2em; text-align: center; margin-bottom: 8px; }
+.pin-pad-light .pin-keypad { gap: 10px; }
+.pin-pad-light .pin-key {
+  width: 58px; height: 58px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--text); font-size: 1.2rem; font-weight: 500;
+  cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+}
+.pin-pad-light .pin-key:active { background: var(--accent-bg); border-color: var(--text); transform: scale(0.94); }
+.pin-pad-light .pin-key.clear { font-size: 0.75rem; color: var(--muted); padding: 0; }
+.pin-pad-light .pin-key.clear svg { width: 16px; height: 16px; }
+.pin-pad-light .pin-key.confirm { font-size: 0.9rem; font-weight: 600; color: var(--green); letter-spacing: 0.5px; }
+.pin-pad-light .pin-biometric-row { justify-content: center; margin-top: 12px; }
+.pin-pad-light .pin-biometric-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer; transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  display: flex; align-items: center; justify-content: center;
+}
+.pin-pad-light .pin-biometric-btn:active { background: var(--accent-bg); border-color: var(--text); transform: scale(0.94); }
+.pin-pad-light .pin-biometric-btn svg { width: 18px; height: 18px; }
+.pin-pad-light .pin-toggle {
+  margin-top: 12px; background: none; border: none;
+  color: var(--muted); font-size: 0.8rem; cursor: pointer;
+  text-decoration: underline; width: 100%;
+}
 
 /* ── Top Header ── */
 .top-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 20px 8px;
 }
-.greeting { font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+.greeting-wrap { flex: 1; min-width: 0; }
+.greeting {
+  font-size: 1.6rem; font-weight: 700; color: var(--text); line-height: 1.3;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 0 2px;
+}
+.greeting-pre { color: var(--text); }
 .greeting-name { font-weight: 800; color: var(--text); }
-.header-right { display: flex; align-items: center; gap: 12px; }
+.greeting-post { color: var(--text); }
+.header-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
 .avatar {
   width: 40px; height: 40px; border-radius: 50%;
@@ -534,7 +640,6 @@ body {
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ── Spinner ── */
-.spinner { text-align: center; padding: 60px; color: var(--muted); }
 
 /* ── Stats Page ── */
 .stats-page { padding: 0 0 100px; }

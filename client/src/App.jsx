@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer
 } from 'recharts'
-import { AUTH } from './auth'
 import { getCatMeta, autoCategorize, CATEGORIES, getRandomGreeting } from './categories'
+import { AUTH } from './auth'
 import LockScreen from './LockScreen'
 
 const STORAGE_KEY = 'mt_entries'
@@ -45,7 +45,6 @@ const formatDate = (d) => {
 const fmt = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(n)
 
 export default function App() {
-  const [unlocked, setUnlocked] = useState(false)
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
   const [chartRange, setChartRange] = useState('monthly')
@@ -61,6 +60,23 @@ export default function App() {
   const [editName, setEditName] = useState('')
   const [confirmResetOpen, setConfirmResetOpen] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [unlocked, setUnlocked] = useState(false)
+  const [lockModalOpen, setLockModalOpen] = useState(false)
+  const [biometricSupported, setBiometricSupported] = useState(false)
+  const [biometricLoading, setBiometricLoading] = useState(false)
+  const [lockPin, setLockPin] = useState('')
+  const [lockPinConfirm, setLockPinConfirm] = useState('')
+  const [lockPinError, setLockPinError] = useState('')
+  const [lockPinMode, setLockPinMode] = useState('setup') // 'setup' | 'confirm'
+  const [changePinMode, setChangePinMode] = useState('check') // 'check' = verify old PIN, 'setup' = enter new, 'confirm' = re-enter new
+  const [changePinOld, setChangePinOld] = useState('')
+  const [changePinNew, setChangePinNew] = useState('')
+  const [changePinNewConfirm, setChangePinNewConfirm] = useState('')
+  const [changePinError, setChangePinError] = useState('')
+  const [changePinLoading, setChangePinLoading] = useState(false)
+  const [bioChangeMode, setBioChangeMode] = useState(null) // null | 'enable' | 'confirm-enable'
+  const [bioChangeLoading, setBioChangeLoading] = useState(false)
+  const [bioChangeError, setBioChangeError] = useState('')
 
   // Form state
   const [amount, setAmount] = useState('')
@@ -71,6 +87,7 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false)
 
   const historyScrollRef = useRef(null)
+
   // Set random greeting once on mount
   useEffect(() => {
     const name = localStorage.getItem('mt_username') || 'User'
@@ -88,11 +105,22 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (AUTH.isUnlocked()) {
-      setUnlocked(true)
-      fetchEntries()
-    }
+    fetchEntries()
   }, [fetchEntries])
+
+  // On mount: if lock is enabled, always start locked regardless of sessionStorage.
+  // We intentionally do NOT check AUTH.isUnlocked() here because sessionStorage
+  // persists across page reloads in the same tab, which would bypass the lock.
+  useEffect(() => {
+    AUTH.isBiometricSupported().then(setBiometricSupported)
+  }, [])
+
+  // Re-check biometric support whenever lock modal opens
+  useEffect(() => {
+    if (lockModalOpen && !biometricSupported) {
+      AUTH.isBiometricSupported().then(setBiometricSupported)
+    }
+  }, [lockModalOpen])
 
   // ── Stats / Calendar helpers ──
   const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa']
@@ -319,7 +347,8 @@ export default function App() {
     }
   }
 
-  if (!unlocked) return <LockScreen onUnlock={() => setUnlocked(true)} />
+  // Lock guard — show lock screen if user has enabled app lock
+  if (!unlocked && AUTH.isLockEnabled()) return <LockScreen onUnlock={() => setUnlocked(true)} onTryChangePin={() => { setProfileOpen(true); setChangePinMode('check'); setChangePinOld(''); setChangePinNew(''); setChangePinNewConfirm(''); setChangePinError(''); }} />
 
   return (
     <div className="app">
@@ -328,16 +357,20 @@ export default function App() {
 
       {/* ── Top Header ── */}
       <div className="top-header">
-        <div>
-          <div className="greeting">{typeof greeting === 'object' && greeting ? <>
-            <span>{greeting.pre}</span>
-            <span className="greeting-name">{greeting.name}</span>
-            <span>{greeting.post}</span>
-          </> : greeting}</div>
+        <div className="greeting-wrap">
+          <div className="greeting">
+            {typeof greeting === 'object' && greeting ? (
+              <>
+                <span className="greeting-pre">{greeting.pre}</span>
+                <span className="greeting-name">{greeting.name}</span>
+                <span className="greeting-post">{greeting.post}</span>
+              </>
+            ) : greeting}
+          </div>
         </div>
         <div className="header-right">
-          <div className="avatar" title={profileOpen ? 'Save & close' : 'Edit name / Lock app'} onClick={() => {
-            if (profileOpen) { AUTH.lock(); setUnlocked(false); setProfileOpen(false); }
+          <div className="avatar" title={profileOpen ? 'Save & close' : 'Edit name'} onClick={() => {
+            if (profileOpen) { AUTH.lock(); setProfileOpen(false); }
             else { setEditName(userName); setProfileOpen(true); }
           }}>
             {WALLET_ICON}
@@ -647,7 +680,7 @@ export default function App() {
       <div className="bottom-nav">
         <button className={`nav-item ${navView === 'home' ? 'active' : ''}`} onClick={() => setNavView('home')} title="Home">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1"/>
+            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1 1v-4a1 1 0 011 1h2a1 1 0 011 1v4a2 2 0 01-1 1"/>
           </svg>
           Home
         </button>
@@ -788,9 +821,326 @@ export default function App() {
           >
             {resetting ? 'Resetting…' : 'Reset All Data'}
           </button>
+
+          {/* ── App Lock Section ── */}
+          <div style={{ marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+            <div className="form-label" style={{ marginBottom: 12 }}>App Lock</div>
+            {AUTH.isLockEnabled() ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {/* PIN sub-section */}
+                <div>
+                  <div className="form-label" style={{ marginBottom: 8 }}>PIN</div>
+                  {AUTH.isPinEnabled() ? (() => {
+                    // Pin change sub-flow
+                    if (changePinMode === 'check') {
+                      return (
+                        <>
+                          <div className="form-label" style={{ marginBottom: 8, marginTop: 4, fontSize: '0.72rem' }}>Verify old PIN</div>
+                          <div className="pin-dots" style={{ justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+                            {[0,1,2,3].map(i => <div key={i} className={`pin-dot ${i < changePinOld.length ? 'filled' : ''}`} />)}
+                          </div>
+                          {changePinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinError}</div>}
+                          <div className="pin-keypad pin-pad-light" style={{ maxWidth: 200, margin: '0 auto 8px', gap: 10 }}>
+                            {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" onClick={() => setChangePinOld(p => p.length < 4 ? p + n : p)}>{n}</button>)}
+                            <button className="pin-key clear" onClick={() => setChangePinOld(p => p.slice(0, -1))}>✕</button>
+                            <button className="pin-key" onClick={() => setChangePinOld(p => p.length < 4 ? p + '0' : p)}>0</button>
+                            <button className="pin-key confirm" onClick={async () => {
+                              if (changePinOld.length !== 4) return
+                              const ok = await AUTH.verifyPin(changePinOld)
+                              if (ok) { setChangePinMode('setup'); setChangePinOld(''); setChangePinError(''); }
+                              else { setChangePinError('Incorrect PIN'); setChangePinOld(''); }
+                            }}>✓</button>
+                          </div>
+                          <button className="pin-toggle" style={{ display: 'block', margin: '0 auto', fontSize: '0.75rem' }} onClick={() => { setChangePinMode(null); setChangePinOld(''); setChangePinError(''); }}>← Back</button>
+                        </>
+                      )
+                    }
+                    if (changePinMode === 'setup') {
+                      return (
+                        <>
+                          <div className="form-label" style={{ marginBottom: 8, marginTop: 4, fontSize: '0.72rem' }}>Enter new PIN</div>
+                          <div className="pin-dots" style={{ justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+                            {[0,1,2,3].map(i => <div key={i} className={`pin-dot ${i < changePinNew.length ? 'filled' : ''}`} />)}
+                          </div>
+                          {changePinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinError}</div>}
+                          <div className="pin-keypad pin-pad-light" style={{ maxWidth: 200, margin: '0 auto 8px', gap: 10 }}>
+                            {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" onClick={() => setChangePinNew(p => p.length < 4 ? p + n : p)}>{n}</button>)}
+                            <button className="pin-key clear" onClick={() => setChangePinNew('')}>✕</button>
+                            <button className="pin-key" onClick={() => setChangePinNew(p => p.length < 4 ? p + '0' : p)}>0</button>
+                            <button className="pin-key confirm" onClick={() => { if (changePinNew.length === 4) { setChangePinMode('confirm'); setChangePinError(''); } }}>✓</button>
+                          </div>
+                          <button className="pin-toggle" style={{ display: 'block', margin: '0 auto', fontSize: '0.75rem' }} onClick={() => { setChangePinMode('check'); setChangePinNew(''); setChangePinError(''); }}>← Back</button>
+                        </>
+                      )
+                    }
+                    if (changePinMode === 'confirm') {
+                      return (
+                        <>
+                          <div className="form-label" style={{ marginBottom: 8, marginTop: 4, fontSize: '0.72rem' }}>Re-enter new PIN</div>
+                          <div className="pin-dots" style={{ justifyContent: 'center', gap: 10, marginBottom: 8 }}>
+                            {[0,1,2,3].map(i => <div key={i} className={`pin-dot ${i < changePinNewConfirm.length ? 'filled' : ''}`} />)}
+                          </div>
+                          {changePinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinError}</div>}
+                          <div className="pin-keypad pin-pad-light" style={{ maxWidth: 200, margin: '0 auto 8px', gap: 10 }}>
+                            {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" onClick={() => setChangePinNewConfirm(p => p.length < 4 ? p + n : p)}>{n}</button>)}
+                            <button className="pin-key clear" onClick={() => setChangePinNewConfirm('')}>✕</button>
+                            <button className="pin-key" onClick={() => setChangePinNewConfirm(p => p.length < 4 ? p + '0' : p)}>0</button>
+                            <button className="pin-key confirm" onClick={async () => {
+                              if (changePinNewConfirm.length !== 4) return
+                              if (changePinNew !== changePinNewConfirm) {
+                                setChangePinError('PINs do not match. Try again.')
+                                setChangePinMode('setup')
+                                setChangePinNew('')
+                                setChangePinNewConfirm('')
+                                return
+                              }
+                              setChangePinLoading(true)
+                              try {
+                                const res = await AUTH.changePin(changePinOld, changePinNew)
+                                if (!res.ok) { setChangePinError(res.error); }
+                                else { setChangePinMode(null); setChangePinOld(''); setChangePinNew(''); setChangePinNewConfirm(''); setChangePinError(''); showToast('PIN changed'); }
+                              } finally { setChangePinLoading(false); }
+                            }}>✓</button>
+                          </div>
+                          <button className="pin-toggle" style={{ display: 'block', margin: '0 auto', fontSize: '0.75rem' }} onClick={() => { setChangePinMode('setup'); setChangePinNewConfirm(''); setChangePinError(''); }}>← Back</button>
+                        </>
+                      )
+                    }
+                    // Default: show action buttons
+                    return (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button className="modal-submit" style={{ flex: 1, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
+                          onClick={() => { setChangePinMode('check'); setChangePinOld(''); setChangePinNew(''); setChangePinNewConfirm(''); setChangePinError(''); }}>
+                          Change PIN
+                        </button>
+                        <button className="modal-reset-btn" style={{ fontSize: '0.85rem', padding: '10px 12px' }}
+                          onClick={async () => {
+                            AUTH.removePin()
+                            showToast('PIN removed')
+                          }}>
+                          Remove PIN
+                        </button>
+                      </div>
+                    )
+                  })() : (
+                    <button className="modal-submit" style={{ width: '100%', marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
+                      onClick={() => { setLockModalOpen(true); }}>
+                      Set PIN
+                    </button>
+                  )}
+                </div>
+
+                {/* Biometric sub-section */}
+                <div>
+                  <div className="form-label" style={{ marginBottom: 8 }}>Fingerprint / Face Unlock</div>
+                  {biometricSupported ? (
+                    AUTH.isBiometricEnabled() ? (() => {
+                      if (bioChangeMode === 'enable') {
+                        return (
+                          <>
+                            <div className="form-label" style={{ marginBottom: 8, marginTop: 4, fontSize: '0.72rem' }}>Confirm to enable biometric unlock</div>
+                            <button className="modal-submit" style={{ width: '100%', marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
+                              disabled={bioChangeLoading}
+                              onClick={async () => {
+                                setBioChangeLoading(true)
+                                try {
+                                  await AUTH.setupBiometric()
+                                  AUTH.setLockEnabled(true)
+                                  AUTH.unlock()
+                                  setUnlocked(true)
+                                  setBioChangeMode(null)
+                                  showToast('Biometric unlock enabled')
+                                } catch (e) {
+                                  setBioChangeError(e?.message || 'Biometric setup failed')
+                                } finally {
+                                  setBioChangeLoading(false)
+                                }
+                              }}>
+                              {bioChangeLoading ? '⏳ Setting up…' : 'Enable'}
+                            </button>
+                            <button className="pin-toggle" style={{ display: 'block', margin: '8px auto 0', fontSize: '0.75rem' }}
+                              onClick={() => { setBioChangeMode(null); setBioChangeError(''); }}>← Back</button>
+                            {bioChangeError && <div className="pin-error" style={{ textAlign: 'center', marginTop: 8, fontSize: '0.75rem' }}>{bioChangeError}</div>}
+                          </>
+                        )
+                      }
+                      return (
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button className="modal-submit" style={{ flex: 1, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
+                            onClick={() => setBioChangeMode('enable')}>
+                            Re-Enable Biometric
+                          </button>
+                          <button className="modal-reset-btn" style={{ fontSize: '0.85rem', padding: '10px 12px' }}
+                            onClick={async () => {
+                              AUTH.removeBiometric()
+                              showToast('Biometric removed')
+                            }}>
+                            Remove Biometric
+                          </button>
+                        </div>
+                      )
+                    })() : (
+                      <button className="modal-submit" style={{ width: '100%', marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
+                        onClick={() => setBioChangeMode('enable')}>
+                        Enable Fingerprint Unlock
+                      </button>
+                    )
+                  ) : (
+                    <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>Not supported on this device</span>
+                  )}
+                </div>
+
+                <button className="modal-reset-btn" style={{ marginTop: 8 }}
+                  onClick={() => { AUTH.clearLock(); setUnlocked(false); setProfileOpen(false); setLockModalOpen(false); showToast('App lock disabled'); }}>
+                  Turn Off App Lock
+                </button>
+              </div>
+            ) : (
+              <button
+                className="modal-submit"
+                style={{ marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                onClick={() => setLockModalOpen(true)}
+              >
+                Set Up App Lock
+              </button>
+            )}
+          </div>
+
           <button
             className="modal-close"
             onClick={() => setProfileOpen(false)}
+            style={{ position: 'absolute', top: 16, right: 16, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem' }}
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      {/* ── Lock Setup Modal ── */}
+      <div className={`modal-overlay ${lockModalOpen ? 'open' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) setLockModalOpen(false) }}>
+        <div className="modal-sheet">
+          <div className="modal-handle" />
+          <div className="modal-title">Set Up App Lock</div>
+
+          {/* PIN section */}
+          <div style={{ marginBottom: 20 }}>
+            <div className="form-label" style={{ marginBottom: 8 }}>PIN Code</div>
+            {lockPinMode === 'setup' ? (
+              <>
+                <div className="pin-dots" style={{ justifyContent: 'center', gap: 14, marginBottom: 12 }}>
+                  {[0,1,2,3].map(i => (
+                    <div key={i} className={`pin-dot ${i < lockPin.length ? 'filled' : ''}`} />
+                  ))}
+                </div>
+                {lockPinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 12 }}>{lockPinError}</div>}
+                <div className="pin-keypad pin-pad-light" style={{ maxWidth: 220, margin: '0 auto' }}>
+                  {[1,2,3,4,5,6,7,8,9].map(n => (
+                    <button key={n} className="pin-key" onClick={() => setLockPin(p => p.length < 4 ? p + n : p)}>{n}</button>
+                  ))}
+                  <button className="pin-key clear" onClick={() => setLockPin('')}>✕</button>
+                  <button className="pin-key" onClick={() => setLockPin(p => p.length < 4 ? p + '0' : p)}>0</button>
+                  <button className="pin-key confirm" onClick={() => {
+                    if (lockPin.length !== 4) return
+                    setLockPinConfirm(lockPin)
+                    setLockPinMode('confirm')
+                    setLockPinError('')
+                  }}>✓</button>
+                </div>
+              </>
+            ) : lockPinMode === 'confirm' ? (
+              <>
+                <div className="pin-dots" style={{ justifyContent: 'center', gap: 14, marginBottom: 12 }}>
+                  {[0,1,2,3].map(i => (
+                    <div key={i} className={`pin-dot ${i < lockPinConfirm.length ? 'filled' : ''}`} />
+                  ))}
+                </div>
+                {lockPinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 12 }}>{lockPinError}</div>}
+                <div className="pin-keypad pin-pad-light" style={{ maxWidth: 220, margin: '0 auto' }}>
+                  {[1,2,3,4,5,6,7,8,9].map(n => (
+                    <button key={n} className="pin-key" onClick={() => setLockPinConfirm(p => p.length < 4 ? p + n : p)}>{n}</button>
+                  ))}
+                  <button className="pin-key clear" onClick={() => setLockPinConfirm('')}>✕</button>
+                  <button className="pin-key" onClick={() => setLockPinConfirm(p => p.length < 4 ? p + '0' : p)}>0</button>
+                  <button className="pin-key confirm" onClick={async () => {
+                    if (lockPinConfirm.length !== 4) return
+                    if (lockPin !== lockPinConfirm) {
+                      setLockPinError('PINs do not match. Try again.')
+                      setLockPinMode('setup')
+                      setLockPin('')
+                      setLockPinConfirm('')
+                      return
+                    }
+                    await AUTH.setPin(lockPin)
+                    AUTH.setLockEnabled(true)
+                    AUTH.unlock()
+                    setUnlocked(true)
+                    setLockModalOpen(false)
+                    setProfileOpen(false)
+                    showToast('PIN set — lock enabled')
+                  }}>✓</button>
+                </div>
+                <button className="pin-toggle" style={{ display: 'block', margin: '12px auto 0' }}
+                  onClick={() => { setLockPinMode('setup'); setLockPin(''); setLockPinConfirm(''); setLockPinError('') }}>
+                  ← Back
+                </button>
+              </>
+            ) : (
+              <button className="modal-submit" style={{ marginTop: 0 }}
+                onClick={() => { setLockPinMode('setup'); setLockPin(''); setLockPinConfirm(''); setLockPinError(''); }}>
+                Set PIN
+              </button>
+            )}
+          </div>
+
+          {/* Biometric section */}
+          {biometricSupported && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>
+              <div className="form-label" style={{ marginBottom: 10 }}>Fingerprint / Face Unlock</div>
+              {AUTH.isBiometricEnabled() ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>✓ Biometric enabled</span>
+                  <button
+                    className="modal-reset-btn"
+                    style={{ marginTop: 0 }}
+                    onClick={async () => {
+                      AUTH.removeBiometric()
+                      showToast('Biometric removed')
+                    }}
+                  >
+                    Remove Biometric
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="modal-submit"
+                  style={{ marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+                  disabled={biometricLoading}
+                  onClick={async () => {
+                    setBiometricLoading(true)
+                    try {
+                      await AUTH.setupBiometric()
+                      AUTH.setLockEnabled(true)
+                      AUTH.unlock()
+                      setUnlocked(true)
+                      setLockModalOpen(false)
+                      setProfileOpen(false)
+                      showToast('Biometric unlock enabled')
+                    } catch (e) {
+                      showToast(e?.message || 'Biometric setup failed')
+                    } finally {
+                      setBiometricLoading(false)
+                    }
+                  }}
+                >
+                  {biometricLoading ? '⏳ Setting up…' : 'Enable Fingerprint Unlock'}
+                </button>
+              )}
+            </div>
+          )}
+
+          <button
+            className="modal-close"
+            onClick={() => setLockModalOpen(false)}
             style={{ position: 'absolute', top: 16, right: 16, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem' }}
           >
             ✕
@@ -805,8 +1155,6 @@ export default function App() {
           <div className="modal-title" style={{ color: 'var(--red)' }}>Reset All Data?</div>
           <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.6, margin: '0 0 20px' }}>
             This will delete all your transactions and reset the app. This can't be undone.
-            <br /><br />
-            Your PIN and biometric lock will remain intact.
           </p>
           <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
             <button
