@@ -50,6 +50,7 @@ export default function LockScreen({ onUnlock }) {
     if (hasBiometric && !hasPin && biometricSupported) {
       handleBiometric('verify')
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasBiometric, hasPin, biometricSupported])
 
   const handleBiometric = useCallback(async (action) => {
@@ -62,10 +63,21 @@ export default function LockScreen({ onUnlock }) {
           AUTH.unlock()
           onUnlock()
         } else {
-          const newFailCount = bioFailCount + 1
-          setBioFailCount(newFailCount)
-          setBioError(newFailCount >= 3 ? 'Too many failed attempts' : 'Biometric failed')
-          if (newFailCount >= 3) setShowRecovery(true)
+          // NO_CREDENTIALS / NOT_ENROLLED means the stored flag is stale —
+          // auto-retrigger setup so the user can re-enroll without ever
+          // seeing the fail counter. This handles the case where the native
+          // key was cleared (e.g. OS factory reset, biometric cleared in
+          // device settings) but localStorage still says "enabled".
+          if (bioError.startsWith('[no-credential]')) {
+            await AUTH.setupBiometric()
+            AUTH.unlock()
+            onUnlock()
+          } else {
+            const newFailCount = bioFailCount + 1
+            setBioFailCount(newFailCount)
+            setBioError(newFailCount >= 3 ? 'Too many failed attempts' : 'Biometric failed')
+            if (newFailCount >= 3) setShowRecovery(true)
+          }
         }
       } else if (action === 'setup') {
         await AUTH.setupBiometric()
@@ -73,11 +85,25 @@ export default function LockScreen({ onUnlock }) {
         onUnlock()
       }
     } catch (e) {
-      setBioError(e?.message || 'Authentication failed')
+      // NO_CREDENTIALS thrown from the native register path means the key
+      // doesn't exist yet — fall back to setup automatically.
+      if (e?.message?.includes('NO_CREDENTIALS') || e?.message?.includes('Call register')) {
+        // setup is the right path; re-call without wrapping to avoid double-loading
+        try {
+          await AUTH.setupBiometric()
+          AUTH.unlock()
+          onUnlock()
+        } catch (_) {
+          setBioError('Biometric setup failed. Try again.')
+        }
+      } else {
+        setBioError(e?.message || 'Authentication failed')
+      }
     } finally {
       setBioLoading(false)
     }
-  }, [onUnlock, bioFailCount])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onUnlock, bioFailCount, bioError])
 
   const handlePinInput = useCallback((digit) => {
     setPin(p => p.length < 4 ? p + digit : p)
@@ -135,19 +161,28 @@ export default function LockScreen({ onUnlock }) {
           <LockIcon />
         </div>
 
-        {/* Title area */}
-        <div className="lock-title">Money Tracker</div>
-        <div className="lock-subtitle">{pinSubtitle}</div>
-        <div className="pin-helper-text">Your PIN contains at least 4 digits</div>
+        {/* Title area — hidden in biometric-only mode */}
+        {hasPin && (
+          <>
+            <div className="lock-subtitle">{pinSubtitle}</div>
+            <div className="pin-helper-text">Your PIN contains at least 4 digits</div>
+          </>
+        )}
+        {!hasPin && (
+          <div className="lock-subtitle">Unlock with biometrics</div>
+        )}
 
-        {/* PIN dots */}
-        <div className="pin-dots">
-          {dots.map((_, i) => (
-            <div key={i} className={`pin-dot ${i < displayPin.length ? 'filled' : ''}`} />
-          ))}
-        </div>
+        {/* PIN dots — hidden in biometric-only mode */}
+        {hasPin && (
+          <div className="pin-dots">
+            {dots.map((_, i) => (
+              <div key={i} className={`pin-dot ${i < displayPin.length ? 'filled' : ''}`} />
+            ))}
+          </div>
+        )}
 
-        <div className="pin-error">{pinError}</div>
+        {/* PIN error — hidden in biometric-only mode */}
+        {hasPin && <div className="pin-error">{pinError}</div>}
 
         {/* PIN keypad — shown when PIN is set (pin-only or both) */}
         {(isPinOnly || isBoth) && (
@@ -173,7 +208,7 @@ export default function LockScreen({ onUnlock }) {
         )}
 
         {/* Confirm-back button */}
-        {pinMode === 'confirm-pin' && (
+        {pinMode === 'confirm-pin' && hasPin && (
           <button className="pin-toggle" onClick={() => { setPinMode('setup'); setPinConfirm(''); setPinError('') }}>
             ← Back
           </button>
@@ -182,7 +217,6 @@ export default function LockScreen({ onUnlock }) {
         {/* Biometric-only view */}
         {isBiometricOnly && (
           <div>
-            <div className="lock-subtitle" style={{ marginBottom: 1.5 }}>Unlock with biometrics</div>
             <button
               className="biometric-btn"
               onClick={() => { setBioError(''); setShowRecovery(false); setBioFailCount(0); handleBiometric('verify'); }}
@@ -191,7 +225,7 @@ export default function LockScreen({ onUnlock }) {
               {bioLoading ? '⏳' : <FingerprintIcon />}
             </button>
             <div className="biometric-label">
-              {AUTH.isBiometricEnabled() ? 'Touch ID / Face ID' : 'Set up biometric unlock'}
+              {biometricSupported ? 'Touch ID / Face ID' : 'Set up biometric unlock'}
             </div>
             {bioError && (
               <div>

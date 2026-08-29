@@ -84,6 +84,7 @@ export default function App() {
   const [categoryInput, setCategoryInput] = useState('')
   const [description, setDescription] = useState('')
   const [manualCat, setManualCat] = useState('')
+  const [txDate, setTxDate] = useState(() => new Date().toISOString().split('T')[0])
   const [submitting, setSubmitting] = useState(false)
 
   const historyScrollRef = useRef(null)
@@ -121,6 +122,18 @@ export default function App() {
       AUTH.isBiometricSupported().then(setBiometricSupported)
     }
   }, [lockModalOpen])
+
+  // When the user unlocks the app, any element that retained focus from the
+  // lock screen (biometric prompt, hidden inputs) can cause Android/WebView to
+  // pop the on-screen keyboard on the next render cycle. Clear it immediately.
+  useEffect(() => {
+    if (unlocked) {
+      const el = document.activeElement
+      if (el && el !== document.body) {
+        el.blur()
+      }
+    }
+  }, [unlocked])
 
   // ── Stats / Calendar helpers ──
   const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa']
@@ -309,12 +322,13 @@ export default function App() {
         type,
         category: resolvedCat,
         note: description.trim() || categoryInput.trim(),
-        date: new Date().toISOString().split('T')[0]
+        date: txDate
       }
       const updated = [newEntry, ...entries]
       saveEntries(updated)
       setEntries(updated)
       setAmount(''); setCategoryInput(''); setDescription(''); setManualCat('')
+      setTxDate(new Date().toISOString().split('T')[0])
       setModalOpen(false)
       showToast('✓ Entry added')
     } catch (err) {
@@ -731,7 +745,7 @@ export default function App() {
               <div className="form-group">
                 <label className="form-label">Date</label>
                 <input className="form-input" type="date"
-                  value={new Date().toISOString().split('T')[0]} readOnly />
+                  value={txDate} onChange={e => setTxDate(e.target.value)} />
               </div>
             </div>
 

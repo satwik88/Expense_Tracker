@@ -96,8 +96,11 @@ export const AUTH = {
         if (code === errorCode?.USER_CANCELLED || code === errorCode?.BUTTON_CANCEL) {
           return false
         }
-        if (code === errorCode?.NOT_ENROLLED) {
-          throw new Error('No biometrics enrolled. Set up fingerprint or face unlock in your device settings.')
+        if (code === errorCode?.NOT_ENROLLED || code === errorCode?.NO_CREDENTIALS) {
+          // Credential flag is set but no native key exists (first-time
+          // enrollment didn't actually persist, or the OS cleared the key).
+          // Throw a distinguishable error so the caller can auto-re-enroll.
+          throw new Error('NO_CREDENTIALS: ' + (result.error?.message || 'No credential registered'))
         }
         if (code === errorCode?.LOCKED_OUT) {
           throw new Error('Too many attempts. Unlock your device and try again.')

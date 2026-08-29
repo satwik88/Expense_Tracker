@@ -1,5 +1,8 @@
 {
   "appId": "com.satwik.moneytracker",
   "appName": "Money Tracker",
-  "webDir": "dist"
+  "webDir": "dist",
+  "android": {
+    "initialFocus": false
+  }
 }
