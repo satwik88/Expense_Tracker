@@ -3,6 +3,7 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* ── Light Theme (default) ── */
 :root {
   --bg:    #F5F5F5;
   --card:  #FFFFFF;
@@ -22,6 +23,25 @@
   --radius-lg:24px;
   --shadow: 0 2px 16px rgba(0,0,0,0.06);
   --shadow-lg:0 8px 32px rgba(0,0,0,0.10);
+}
+
+/* ── Dark Theme ── */
+[data-theme="dark"] {
+  --bg:    #0D0D0D;
+  --card:  #1A1A1A;
+  --card-dk:#F5F5F5;
+  --text:  #F0F0F0;
+  --muted: #888888;
+  --light: #666666;
+  --border:#2A2A2A;
+  --accent:#F0F0F0;
+  --accent-bg:rgba(240,240,240,0.08);
+  --green:#4ADE80;
+  --green-light:rgba(74,222,128,0.12);
+  --red:#F87171;
+  --red-light:rgba(248,113,113,0.10);
+  --shadow: 0 2px 16px rgba(0,0,0,0.30);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.45);
 }
 
 body {
@@ -220,6 +240,9 @@ body {
   position: relative;
   overflow: hidden;
 }
+[data-theme="dark"] .balance-card {
+  color: #111;
+}
 .balance-card::before {
   content: '';
   position: absolute; top: -40px; right: -40px;
@@ -227,12 +250,18 @@ body {
   border-radius: 50%;
   background: rgba(255,255,255,0.04);
 }
+[data-theme="dark"] .balance-card::before {
+  background: rgba(0,0,0,0.06);
+}
 .balance-card::after {
   content: '';
   position: absolute; bottom: -60px; left: -30px;
   width: 200px; height: 200px;
   border-radius: 50%;
   background: rgba(255,255,255,0.02);
+}
+[data-theme="dark"] .balance-card::after {
+  background: rgba(0,0,0,0.08);
 }
 .balance-label {
   font-size: 0.78rem;
@@ -243,6 +272,9 @@ body {
   position: relative;
   z-index: 1;
 }
+[data-theme="dark"] .balance-label {
+  color: rgba(0,0,0,0.40);
+}
 .balance-amount {
   font-size: 2.4rem;
   font-weight: 800;
@@ -250,9 +282,6 @@ body {
   position: relative;
   z-index: 1;
 }
-.balance-change.positive { background: var(--green-light); color: var(--green); }
-.balance-change.negative { background: var(--red-light); color: var(--red); }
-
 /* ── Quick Stats Row ── */
 .stats-row {
   display: grid;
@@ -289,6 +318,7 @@ body {
   margin-bottom: 14px;
 }
 .chart-title { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 600; }
+[data-theme="dark"] .chart-title { color: rgba(0,0,0,0.55); }
 .chart-tabs {
   display: flex;
   gap: 4px;
@@ -296,6 +326,9 @@ body {
   border-radius: 10px;
   padding: 3px;
   margin-bottom: 14px;
+}
+[data-theme="dark"] .chart-tabs {
+  background: rgba(0,0,0,0.08);
 }
 .chart-tab {
   flex: 1;
@@ -313,6 +346,10 @@ body {
   background: #fff;
   color: var(--card-dk);
 }
+[data-theme="dark"] .chart-tab.active {
+  background: #111;
+  color: #fff;
+}
 .chart-container { height: 260px; }
 .chart-container-with-legend {
   display: flex;
@@ -322,6 +359,7 @@ body {
 .chart-container-with-legend .pie-chart-left {
   flex: 0 0 55%;
   height: 220px;
+  overflow: hidden;
 }
 .chart-container-with-legend .pie-legend {
   flex: 1;
@@ -360,9 +398,30 @@ body {
   font-weight: 700;
   fill: rgba(255, 255, 255, 0.9);
 }
+[data-theme="dark"] .pie-center-total {
+  fill: rgba(0, 0, 0, 0.75);
+}
+/* Force no stroke on pie sectors (including focus/active state) and any stray recharts backgrounds */
+.recharts-pie-sector { stroke: none !important; }
+.recharts-pie-sector.recharts-active-shape { stroke: none !important; }
+.recharts-active-shape { stroke: none !important; }
+.recharts-wrapper { background: transparent !important; }
+/* Kill the white SVG bounding box visible in Android WebView */
+.pie-chart-left { overflow: hidden !important; }
+.pie-chart-left .recharts-wrapper { background: transparent !important; }
+.pie-chart-left .recharts-tooltip-wrapper { display: none !important; }
+/* Remove ALL strokes from SVG elements inside the chart to eliminate white border */
+.pie-chart-left svg path,
+.pie-chart-left svg rect,
+.pie-chart-left svg text,
+.pie-chart-left svg g { stroke: none !important; }
+.pie-chart-left svg { background: transparent !important; }
 .chart-empty {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   height: 100%; gap: 8px; color: rgba(255,255,255,0.35);
+}
+[data-theme="dark"] .chart-empty {
+  color: rgba(0,0,0,0.25);
 }
 .chart-container-with-legend .chart-empty {
   width: 100%;
@@ -375,9 +434,15 @@ body {
   color: #fff; font-size: 0.78rem; min-width: 90px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
+[data-theme="dark"] .pie-tooltip {
+  background: #eee;
+  color: #111;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
 .pie-tooltip-cat { font-weight: 700; margin-bottom: 2px; font-size: 0.82rem; }
 .pie-tooltip-val { font-size: 0.95rem; font-weight: 700; }
 .pie-tooltip-pct { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-top: 1px; }
+[data-theme="dark"] .pie-tooltip-pct { color: rgba(0,0,0,0.45); }
 .pie-legend {
   display: flex; flex-direction: column; gap: 5px;
   padding: 10px 8px 4px;
@@ -390,8 +455,11 @@ body {
   width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
 }
 .pie-legend-label { flex: 1; color: rgba(255,255,255,0.65); font-weight: 500; }
+[data-theme="dark"] .pie-legend-label { color: rgba(0,0,0,0.60); }
 .pie-legend-val { color: rgba(255,255,255,0.55); font-weight: 600; min-width: 52px; text-align: right; }
+[data-theme="dark"] .pie-legend-val { color: rgba(0,0,0,0.50); }
 .pie-legend-pct { color: rgba(255,255,255,0.35); font-size: 0.7rem; min-width: 28px; text-align: right; }
+[data-theme="dark"] .pie-legend-pct { color: rgba(0,0,0,0.30); }
 
 /* ── Transactions Section ── */
 .section-header {
@@ -445,6 +513,9 @@ body {
   display: flex; align-items: center; justify-content: center;
   font-size: 1.2rem; flex-shrink: 0;
 }
+[data-theme="dark"] .tx-icon {
+  background: #252525;
+}
 .tx-details { flex: 1; min-width: 0; }
 .tx-category { font-size: 0.9rem; font-weight: 600; color: var(--text); }
 .tx-type { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
@@ -460,6 +531,14 @@ body {
 }
 .tx-item:hover .tx-delete { opacity: 1; }
 .tx-delete:hover { color: var(--text); }
+.tx-delete.confirming {
+  background: var(--red); color: #fff; border-radius: 50%;
+  animation: pulse-red 0.6s ease-in-out infinite alternate;
+}
+@keyframes pulse-red {
+  from { opacity: 0.7; transform: scale(1); }
+  to   { opacity: 1;   transform: scale(1.15); }
+}
 
 .empty-state { text-align: center; padding: 48px 20px; color: var(--muted); }
 .empty-state .icon { font-size: 2.5rem; margin-bottom: 8px; }
@@ -629,6 +708,31 @@ body {
 }
 .chip-clear:hover { opacity: 1; }
 
+/* ── Category Picker Chips ── */
+.cat-picker {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.cat-picker-chip {
+  padding: 4px 10px; border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--card);
+  color: var(--muted); font-size: 0.75rem; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.cat-picker-chip:hover {
+  border-color: var(--accent); color: var(--text);
+}
+.cat-picker-chip.active {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+}
+.cat-picker-chip.suggested {
+  border-color: var(--accent); color: var(--accent);
+  background: transparent;
+}
+.cat-picker-chip.suggested:hover {
+  background: var(--accent); color: #fff;
+}
+
 /* ── Toast ── */
 .toast {
   position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -728,6 +832,7 @@ body {
   position: relative;
 }
 .day-indicator.has-tx { border-color: var(--text); background: rgba(17,17,17,0.06); }
+[data-theme="dark"] .day-indicator.has-tx { background: rgba(240,240,240,0.06); }
 .day-indicator-dot {
   width: 10px; height: 10px; border-radius: 50%;
   background: var(--light); flex-shrink: 0;
@@ -740,3 +845,54 @@ body {
 .period-stats-row {
   display: flex; gap: 8px; margin: 0 20px 12px;
 }
+
+/* ── Profile Modal (right-side drawer) ── */
+.profile-modal {
+  position: fixed; inset: 0; z-index: 600;
+  display: flex; justify-content: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.profile-modal.open { opacity: 1; pointer-events: auto; }
+.profile-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.45);
+}
+.profile-drawer {
+  position: relative;
+  width: min(320px, 85vw);
+  height: 100%;
+  background: var(--bg);
+  margin-left: auto;
+  padding: 20px 20px 40px;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  box-shadow: -8px 0 32px rgba(0,0,0,0.15);
+}
+.profile-modal.open .profile-drawer { transform: translateX(0); }
+.profile-close-btn {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: none;
+  font-size: 1.3rem; font-weight: 800;
+  color: var(--text); cursor: pointer;
+  line-height: 1; padding: 4px;
+}
+.profile-close-btn:hover { opacity: 0.6; }
+.profile-section-title {
+  font-size: 0.7rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 10px; margin-top: 24px;
+}
+.profile-section-title:first-child { margin-top: 0; }
+.theme-options { display: flex; gap: 8px; }
+.theme-opt {
+  flex: 1; padding: 10px 6px; border-radius: var(--radius-sm);
+  border: 2px solid var(--border); background: var(--card);
+  cursor: pointer; text-align: center; transition: all 0.15s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.theme-opt:hover { border-color: var(--muted); }
+.theme-opt.active { border-color: var(--text); background: var(--accent-bg); }
+.theme-opt-icon { font-size: 1.2rem; }
+.theme-opt-label { font-size: 0.72rem; font-weight: 600; color: var(--text); }

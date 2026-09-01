@@ -7,18 +7,28 @@ export const CATEGORY_META = {
   Entertainment:{ emoji: '🎬', label: 'Entertain'},
   Education:    { emoji: '📚', label: 'Education'},
   Health:       { emoji: '🏥', label: 'Health'   },
+  Travel:       { emoji: '✈️', label: 'Travel'   },
+  'Personal Care': { emoji: '💅', label: 'Personal Care' },
+  Transfers:    { emoji: '↔️', label: 'Transfers'},
+  Subscriptions:{ emoji: '🔄', label: 'Subscriptions' },
   Other:        { emoji: '📦', label: 'Other'    },
 }
 
 export const KEYWORD_MAP = [
-  { keywords: ['pocket money','allowance','gift','received from mom','received from dad','cashback','refund','freelance','freelancer','client'], category: 'Credited' },
-  { keywords: ['swiggy','zomato','restaurant','cafe','lunch','dinner','groceries','big bazaar','dmart','mess','canteen','food','burger','pizza','tea','chai','coffee','bread','milk','biscuit'], category: 'Food' },
-  { keywords: ['uber','ola','metro','petrol','fuel','bus','auto','cab','train','rickshaw','travel','ride','commute'], category: 'Transport' },
-  { keywords: ['rent','electricity','wifi','recharge','water bill','gas bill','hostel fee','light bill','internet'], category: 'Bills' },
-  { keywords: ['amazon','flipkart','myntra','mall','clothes','shoes','shirt','pant','wardrobe','online shopping','ebay'], category: 'Shopping' },
-  { keywords: ['netflix','movie','spotify','prime','bookmyshow','gaming','game','youtube','music','show','entertainment'], category: 'Entertainment' },
-  { keywords: ['books','stationery','course','tuition','exam fee','printout','college','class','fees','school','pen','notebook'], category: 'Education' },
-  { keywords: ['pharmacy','hospital','doctor','medicine','medical','health','clinic'], category: 'Health' },
+  // ── Specific categories first (checked before broader matches) ──
+  { keywords: ['money transfer to','sent to','paid to','upi to','transfer to','gpay','phonepe','paytm','venmo','paypal','bank transfer','wiring','remittance'], category: 'Transfers' },
+  { keywords: ['subscription','youtube premium','amazon prime','monthly subscription','annual subscription','hotstar','disney','hulu'], category: 'Subscriptions' },
+  { keywords: ['flight','train ticket','bus ticket','cab booking','cab ride','trip','hotel','airbnb','makemytrip','goibibo','indigo','air india','spicejet','vistara','airway','vacation','holiday','tour','railway','irctc','travel agency','passport','visa','boarding pass'], category: 'Travel' },
+  { keywords: ['screen guard','phone case','grooming','salon','haircut','barber','cosmetics','beauty','skincare','shampoo','soap','perfume','deodorant','razor','tweezers','manicure','pedicure','spa','facial','massage','personal','hygiene'], category: 'Personal Care' },
+  { keywords: ['books','stationery','course','tuition','exam fee','printout','college','class','fees','school','pen','notebook','brush','art supplies','supplies','sketch','pencil','尺','尺子','scale','geometry box','eraser','glue','stapler','folder','file','paper','writing'], category: 'Education' },
+  // ── Broader categories ──
+  { keywords: ['pocket money','allowance','gift','received from mom','received from dad','cashback','refund','freelance','freelancer','client','salary','wages','income'], category: 'Credited' },
+  { keywords: ['swiggy','zomato','restaurant','cafe','lunch','dinner','groceries','big bazaar','dmart','mess','canteen','food','burger','pizza','tea','chai','coffee','bread','milk','biscuit','snacks','Breakfast','brunch','meal','eat','order food','thali','biryani','sandwich','momos','samosa','chaat','grocery','supermarket'], category: 'Food' },
+  { keywords: ['uber','ola','metro','petrol','fuel','auto','rickshaw','commute','parking','car wash','vehicle','car','bus','cab','train'], category: 'Transport' },
+  { keywords: ['rent','electricity','light bill','wifi','recharge','water bill','gas bill','hostel fee','maintenance','sewage','garbage','society fee','security deposit','property tax','insurance','loan emi','emi','credit card bill','bills'], category: 'Bills' },
+  { keywords: ['amazon','flipkart','myntra','mall','clothes','shoes','shirt','pant','wardrobe','online shopping','ebay','ajio','reliance digital','croma','best buy','purchase','product','booking'], category: 'Shopping' },
+  { keywords: ['netflix','spotify','prime','bookmyshow','gaming','game','youtube','music','show','entertainment','cinema','pvr','inox','movie ticket','series','podcast','travel'], category: 'Entertainment' },
+  { keywords: ['pharmacy','hospital','doctor','medicine','medical','health','clinic','ayurvedic','dentist','surgery','lab test','scan','xray','therapy','gym','fitness','yoga','medicines','membership'], category: 'Health' },
 ]
 
 export function autoCategorize(text) {

@@ -15,6 +15,18 @@
     body { margin: 0; }
     #root { min-height: 100vh; }
   </style>
+  <script>
+    (function() {
+      try {
+        var key = 'mt_theme', stored = localStorage.getItem(key);
+        var theme = stored || 'system';
+        var resolved = theme === 'system'
+          ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : theme;
+        document.documentElement.setAttribute('data-theme', resolved);
+      } catch(e) {}
+    })();
+  </script>
 </head>
 <body>
   <div id="root"></div>
