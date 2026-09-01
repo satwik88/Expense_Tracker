@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
-  PieChart, Pie, Cell, ResponsiveContainer
+  PieChart, Pie, Cell, ResponsiveContainer, Sector
 } from 'recharts'
 import { getCatMeta, autoCategorize, CATEGORIES, getRandomGreeting } from './categories'
 import { AUTH } from './auth'
 import LockScreen from './LockScreen'
+import { MorphIcon } from "morphicons/react"
+import DatePicker from './DatePicker'
+import { User, X } from "lucide"
 
 const STORAGE_KEY = 'mt_entries'
 const THEME_KEY = 'mt_theme'
@@ -25,11 +28,11 @@ function resolveTheme(stored) {
   return stored === 'system' ? getSystemTheme() : stored
 }
 
-const WALLET_ICON = (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-    <path d="M18 12h0" />
+
+
+const FingerprintIcon = (props) => (
+  <svg width="24" height="24" viewBox="0 0 512 512" fill="currentColor" {...props}>
+    <path d="M48 256C48 141.1 141.1 48 256 48c63.1 0 119.6 28.1 157.8 72.5c8.6 10.1 23.8 11.2 33.8 2.6s11.2-23.8 2.6-33.8C403.3 34.6 333.7 0 256 0C114.6 0 0 114.6 0 256l0 40c0 13.3 10.7 24 24 24s24-10.7 24-24l0-40zm458.5-52.9c-2.7-13-15.5-21.3-28.4-18.5s-21.3 15.5-18.5 28.4c2.9 13.9 4.5 28.3 4.5 43.1l0 40c0 13.3 10.7 24 24 24s24-10.7 24-24l0-40c0-18.1-1.9-35.8-5.5-52.9zM256 80c-19 0-37.4 3-54.5 8.6c-15.2 5-18.7 23.7-8.3 35.9c7.1 8.3 18.8 10.8 29.4 7.9c10.6-2.9 21.8-4.4 33.4-4.4c70.7 0 128 57.3 128 128l0 24.9c0 25.2-1.5 50.3-4.4 75.3c-1.7 14.6 9.4 27.8 24.2 27.8c11.8 0 21.9-8.6 23.3-20.3c3.3-27.4 5-55 5-82.7l0-24.9c0-97.2-78.8-176-176-176zM150.7 148.7c-9.1-10.6-25.3-11.4-33.9-.4C93.7 178 80 215.4 80 256l0 24.9c0 24.2-2.6 48.4-7.8 71.9C68.8 368.4 80.1 384 96.1 384c10.5 0 19.9-7 22.2-17.3c6.4-28.1 9.7-56.8 9.7-85.8l0-24.9c0-27.2 8.5-52.4 22.9-73.1c7.2-10.4 8-24.6-.2-34.2zM256 160c-53 0-96 43-96 96l0 24.9c0 35.9-4.6 71.5-13.8 106.1c-3.8 14.3 6.7 29 21.5 29c9.5 0 17.9-6.2 20.4-15.4c10.5-39 15.9-79.2 15.9-119.7l0-24.9c0-28.7 23.3-52 52-52s52 23.3 52 52l0 24.9c0 36.3-3.5 72.4-10.4 107.9c-2.7 13.9 7.7 27.2 21.8 27.2c10.2 0 19-7 21-17c7.7-38.8 11.6-78.3 11.6-118.1l0-24.9c0-53-43-96-96-96zm24 96c0-13.3-10.7-24-24-24s-24 10.7-24 24l0 24.9c0 59.9-11 119.3-32.5 175.2l-5.9 15.3c-4.8 12.4 1.4 26.3 13.8 31s26.3-1.4 31-13.8l5.9-15.3C267.9 411.9 280 346.7 280 280.9l0-24.9z"/>
   </svg>
 )
 
@@ -52,6 +55,21 @@ const formatDate = (d) => {
   return `${day} ${months[date.getMonth()]}`
 }
 const fmt = (n) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(n)
+
+const renderActiveShape = (props) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+  return (
+    <Sector
+      cx={cx}
+      cy={cy}
+      innerRadius={innerRadius}
+      outerRadius={outerRadius + 8}
+      startAngle={startAngle}
+      endAngle={endAngle}
+      fill={fill}
+    />
+  );
+};
 
 export default function App() {
   const [entries, setEntries] = useState([])
@@ -77,7 +95,7 @@ export default function App() {
   const [lockPinConfirm, setLockPinConfirm] = useState('')
   const [lockPinError, setLockPinError] = useState('')
   const [lockPinMode, setLockPinMode] = useState('setup') // 'setup' | 'confirm'
-  const [changePinMode, setChangePinMode] = useState('check') // 'check' = verify old PIN, 'setup' = enter new, 'confirm' = re-enter new
+  const [changePinMode, setChangePinMode] = useState(null) // null = default buttons, 'check' = verify old PIN, 'setup' = enter new, 'confirm' = re-enter new
   const [changePinOld, setChangePinOld] = useState('')
   const [changePinNew, setChangePinNew] = useState('')
   const [changePinNewConfirm, setChangePinNewConfirm] = useState('')
@@ -87,6 +105,8 @@ export default function App() {
   const [pendingDeleteId, setPendingDeleteId] = useState(null) // id of entry in "tap again to confirm" state
   const [bioChangeLoading, setBioChangeLoading] = useState(false)
   const [bioChangeError, setBioChangeError] = useState('')
+  const [activeHomePieIndex, setActiveHomePieIndex] = useState(null)
+  const [activeStatsPieIndex, setActiveStatsPieIndex] = useState(null)
 
   // Theme
   const [themeStored, setThemeStored] = useState(() => localStorage.getItem(THEME_KEY) || 'system')
@@ -397,11 +417,18 @@ export default function App() {
     }
   }
 
-  // Lock guard — show lock screen if user has enabled app lock
-  if (!unlocked && AUTH.isLockEnabled()) return <LockScreen onUnlock={() => setUnlocked(true)} />
+  // Lock guard — show lock screen on top if user has enabled app lock (allows acrylic blur)
+  const isLocked = !unlocked && AUTH.isLockEnabled();
 
   return (
-    <div className="app">
+    <>
+      {isLocked && <LockScreen onUnlock={() => setUnlocked(true)} />}
+      <div className="app" style={isLocked ? { height: '100vh', overflow: 'hidden' } : {}} onClick={(e) => {
+        if (!e.target.closest('.recharts-wrapper')) {
+        setActiveStatsPieIndex(null);
+        setActiveHomePieIndex(null);
+      }
+    }}>
       {/* Toast */}
       {toast && <div className={`toast ${toast ? 'show' : ''}`}>{toast}</div>}
 
@@ -423,7 +450,7 @@ export default function App() {
             if (profileOpen) { AUTH.lock(); setProfileOpen(false); }
             else { setEditName(userName); setProfileOpen(true); }
           }}>
-            {WALLET_ICON}
+            <MorphIcon icon={profileOpen ? X : User} />
           </div>
         </div>
       </div>
@@ -513,7 +540,17 @@ export default function App() {
                   {hasTx && <span className="day-indicator-count">{txs.length} txns</span>}
                 </div>
                 {txs.length === 0 ? (
-                  <div className="chart-empty"><div className="chart-empty-icon">📭</div><p>No transactions</p></div>
+                  <div className="chart-empty" style={{ padding: '30px 0', textAlign: 'center' }}>
+                    <div className="chart-empty-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 40, height: 40, opacity: 0.5 }}>
+                        <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                        <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                        <path d="M18 12h0" />
+                      </svg>
+                    </div>
+                    <p style={{ margin: '12px 0 4px', fontWeight: 600 }}>Your wallet is taking a nap.</p>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>Wake it up with a new transaction!</p>
+                  </div>
                 ) : txs.map(e => {
                   const meta = getCatMeta(e.category)
                   const isDep = e.type === 'deposit'
@@ -555,20 +592,31 @@ export default function App() {
             <span className="chart-title">Spending by Category</span>
           </div>
           {statsData.pieData.length === 0 ? (
-            <div className="chart-empty" style={{ height: 200 }}>
-              <div className="chart-empty-icon">📊</div>
-              <p>No spending in this period</p>
+            <div className="chart-empty" style={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="chart-empty-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><circle cx="12" cy="12" r="10"></circle><path d="M16 16s-1.5-2-4-2-4 2-4 2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+              </div>
+              <p style={{ margin: '12px 0 4px', fontWeight: 600 }}>It's a ghost town in here...</p>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>Try changing the period or add an expense!</p>
             </div>
           ) : (
             <div className="chart-container chart-container-with-legend">
               <div className="pie-chart-left">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={statsData.pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={82} paddingAngle={3} dataKey="value" stroke="none" strokeWidth={0}>
+                    <Pie data={statsData.pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={82} paddingAngle={3} dataKey="value" stroke="none" strokeWidth={0} onClick={(_, i) => setActiveStatsPieIndex(activeStatsPieIndex === i ? null : i)} activeIndex={activeStatsPieIndex} activeShape={renderActiveShape}>
                       {statsData.pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                     </Pie>
                     <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="pie-center-total">
-                      {fmt(statsData.pieData.reduce((s, d) => s + d.value, 0))}
+                      {activeStatsPieIndex !== null && statsData.pieData[activeStatsPieIndex] ? (
+                        <>
+                          <tspan x="50%" dy="-1em" fontSize="12px" fillOpacity={0.6}>{statsData.pieData[activeStatsPieIndex].category}</tspan>
+                          <tspan x="50%" dy="1.3em" fontSize="11px" fillOpacity={0.5}>{statsData.pieData[activeStatsPieIndex].pct}%</tspan>
+                          <tspan x="50%" dy="1.4em" fontSize="16px">{fmt(statsData.pieData[activeStatsPieIndex].value)}</tspan>
+                        </>
+                      ) : (
+                        fmt(statsData.pieData.reduce((s, d) => s + d.value, 0))
+                      )}
                     </text>
                   </PieChart>
                 </ResponsiveContainer>
@@ -579,7 +627,6 @@ export default function App() {
                     <span className="pie-legend-dot" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                     <span className="pie-legend-label">{d.category}</span>
                     <span className="pie-legend-val">{fmt(d.value)}</span>
-                    <span className="pie-legend-pct">{d.pct}%</span>
                   </div>
                 ))}
               </div>
@@ -605,9 +652,12 @@ export default function App() {
         </div>
         <div className="chart-container chart-container-with-legend">
           {chartData.length === 0 ? (
-            <div className="chart-empty">
-              <div className="chart-empty-icon">📊</div>
-              <p>No spending in this period</p>
+            <div className="chart-empty" style={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="chart-empty-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+              </div>
+              <p style={{ margin: '12px 0 4px', fontWeight: 600 }}>Looks like a clean slate!</p>
+              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--muted)' }}>Tap the + button to add some action.</p>
             </div>
           ) : (
             <>
@@ -618,19 +668,30 @@ export default function App() {
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={58}
-                    outerRadius={80}
+                    innerRadius={55}
+                    outerRadius={82}
                     paddingAngle={3}
                     dataKey="value"
                     stroke="none"
                     strokeWidth={0}
+                    onClick={(_, i) => setActiveHomePieIndex(activeHomePieIndex === i ? null : i)}
+                    activeIndex={activeHomePieIndex}
+                    activeShape={renderActiveShape}
                   >
                     {chartData.map((d, i) => (
                       <Cell key={`cell-${i}`} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                     ))}
                   </Pie>
                   <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="pie-center-total">
-                    {fmt(chartData.reduce((s, d) => s + d.value, 0))}
+                    {activeHomePieIndex !== null && chartData[activeHomePieIndex] ? (
+                      <>
+                        <tspan x="50%" dy="-1em" fontSize="12px" fillOpacity={0.6}>{chartData[activeHomePieIndex].category}</tspan>
+                        <tspan x="50%" dy="1.3em" fontSize="11px" fillOpacity={0.5}>{chartData[activeHomePieIndex].pct}%</tspan>
+                        <tspan x="50%" dy="1.4em" fontSize="16px">{fmt(chartData[activeHomePieIndex].value)}</tspan>
+                      </>
+                    ) : (
+                      fmt(chartData.reduce((s, d) => s + d.value, 0))
+                    )}
                   </text>
                 </PieChart>
               </ResponsiveContainer>
@@ -641,7 +702,6 @@ export default function App() {
                   <span className="pie-legend-dot" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
                   <span className="pie-legend-label">{d.category}</span>
                   <span className="pie-legend-val">{fmt(d.value)}</span>
-                  <span className="pie-legend-pct">{d.pct}%</span>
                 </div>
               ))}
             </div>
@@ -655,7 +715,6 @@ export default function App() {
       {navView === 'history' && <>
       <div className="history-header">
         <span className="section-title">History</span>
-        <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{historySorted.length} entries</span>
       </div>
       <div className="history-filter-bar">
         <button
@@ -673,7 +732,11 @@ export default function App() {
       <div className="history-list" onClick={() => setPendingDeleteId(null)}>
         {historySorted.length === 0 ? (
           <div className="empty-state">
-            <div className="icon">📭</div>
+            <div className="icon">
+              <svg viewBox="0 0 512 512" fill="currentColor" style={{ width: 48, height: 48 }}>
+                <path d="M121 32C91.6 32 66 52 58.9 80.5L1.9 308.4C.6 313.5 0 318.7 0 323.9L0 416c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-92.1c0-5.2-.6-10.4-1.9-15.5l-57-227.9C446 52 420.4 32 391 32L121 32zm0 64l270 0 48 192-51.2 0c-12.1 0-23.2 6.8-28.6 17.7l-14.3 28.6c-5.4 10.8-16.5 17.7-28.6 17.7l-120.4 0c-12.1 0-23.2-6.8-28.6-17.7l-14.3-28.6c-5.4-10.8-16.5-17.7-28.6-17.7L73 288 121 96z"/>
+              </svg>
+            </div>
             <p>No transactions yet.</p>
           </div>
         ) : (
@@ -716,21 +779,20 @@ export default function App() {
       {/* ── Bottom Nav ── */}
       <div className="bottom-nav">
         <button className={`nav-item ${navView === 'home' ? 'active' : ''}`} onClick={() => setNavView('home')} title="Home">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1 1v-4a1 1 0 011 1h2a1 1 0 011 1v4a2 2 0 01-1 1"/>
+          <svg viewBox="0 0 576 512" fill="currentColor">
+            <path d="M575.8 255.5c0 18-15 32.1-32 32.1l-32 0 .7 160.2c0 2.7-.2 5.4-.5 8.1l0 16.2c0 22.1-17.9 40-40 40l-16 0c-1.1 0-2.2 0-3.3-.1c-1.4 .1-2.8 .1-4.2 .1L416 512l-24 0c-22.1 0-40-17.9-40-40l0-24 0-64c0-17.7-14.3-32-32-32l-64 0c-17.7 0-32 14.3-32 32l0 64 0 24c0 22.1-17.9 40-40 40l-24 0-31.9 0c-1.5 0-3-.1-4.5-.2c-1.2 .1-2.4 .2-3.6 .2l-16 0c-22.1 0-40-17.9-40-40l0-112c0-.9 0-1.9 .1-2.8l0-69.7-32 0c-18 0-32-14-32-32.1c0-9 3-17 10-24L266.4 8c7-7 15-8 22-8s15 2 21 7L564.8 231.5c8 7 12 15 11 24z"/>
           </svg>
           Home
         </button>
         <button className={`nav-item ${navView === 'stats' ? 'active' : ''}`} onClick={() => setNavView('stats')} title="Stats">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          <svg viewBox="0 0 512 512" fill="currentColor">
+            <path d="M32 32c17.7 0 32 14.3 32 32l0 336c0 8.8 7.2 16 16 16l400 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L80 480c-44.2 0-80-35.8-80-80L0 64C0 46.3 14.3 32 32 32zM160 224c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32zm128-64l0 160c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-160c0-17.7 14.3-32 32-32s32 14.3 32 32zm64 32c17.7 0 32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96c0-17.7 14.3-32 32-32zM480 96l0 224c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-224c0-17.7 14.3-32 32-32s32 14.3 32 32z"/>
           </svg>
           Stats
         </button>
         <button className={`nav-item ${navView === 'history' ? 'active' : ''}`} onClick={() => setNavView('history')} title="History">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v6l4 2"/>
+          <svg viewBox="0 0 512 512" fill="currentColor">
+            <path d="M256 0a256 256 0 1 1 0 512A256 256 0 1 1 256 0zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/>
           </svg>
           History
         </button>
@@ -767,8 +829,7 @@ export default function App() {
               </div>
               <div className="form-group">
                 <label className="form-label">Date</label>
-                <input className="form-input" type="date"
-                  value={txDate} onChange={e => setTxDate(e.target.value)} />
+                <DatePicker value={txDate} onChange={setTxDate} />
               </div>
             </div>
 
@@ -844,14 +905,12 @@ export default function App() {
       <div className={`profile-modal ${profileOpen ? 'open' : ''}`} onClick={(e) => { if (e.target.classList.contains('profile-backdrop')) setProfileOpen(false) }}>
         <div className="profile-backdrop" />
         <div className="profile-drawer">
-          <button className="profile-close-btn" onClick={() => setProfileOpen(false)}>✕</button>
 
           <div className="modal-title" style={{ marginTop: 8 }}>Welcome</div>
 
           {/* Name */}
           <div className="profile-section-title">Name</div>
           <div className="form-group full" style={{ marginBottom: 20 }}>
-            <label className="form-label">Your Name</label>
             <input
               className="form-input"
               type="text"
@@ -881,9 +940,9 @@ export default function App() {
           <div className="profile-section-title">Theme</div>
           <div className="theme-options" style={{ marginBottom: 20 }}>
             {[
-              { key: 'system', icon: '◐', label: 'System' },
-              { key: 'light', icon: '☀️', label: 'Light' },
-              { key: 'dark', icon: '🌙', label: 'Dark' },
+              { key: 'system', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2v20a10 10 0 0 0 0-20z" fill="currentColor" stroke="none"></path></svg>, label: 'System' },
+              { key: 'light', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>, label: 'Light' },
+              { key: 'dark', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>, label: 'Dark' },
             ].map(opt => (
               <button
                 key={opt.key}
@@ -926,14 +985,18 @@ export default function App() {
                         {changePinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinError}</div>}
                         <div className="pin-keypad pin-pad-light" style={{ maxWidth: 200, margin: '0 auto 8px', gap: 10 }}>
                           {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" onClick={() => setChangePinOld(p => p.length < 4 ? p + n : p)}>{n}</button>)}
-                          <button className="pin-key clear" onClick={() => setChangePinOld(p => p.slice(0, -1))}>✕</button>
+                          <button className="pin-key clear" onClick={() => setChangePinOld(p => p.slice(0, -1))}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+                          </button>
                           <button className="pin-key" onClick={() => setChangePinOld(p => p.length < 4 ? p + '0' : p)}>0</button>
                           <button className="pin-key confirm" onClick={async () => {
                             if (changePinOld.length !== 4) return
                             const ok = await AUTH.verifyPin(changePinOld)
                             if (ok) { setChangePinMode('setup'); setChangePinOld(''); setChangePinError(''); }
                             else { setChangePinError('Incorrect PIN'); setChangePinOld(''); }
-                          }}>✓</button>
+                          }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </button>
                         </div>
                         <button className="pin-toggle" style={{ display: 'block', margin: '0 auto', fontSize: '0.75rem' }} onClick={() => { setChangePinMode(null); setChangePinOld(''); setChangePinError(''); }}>← Back</button>
                       </>
@@ -949,9 +1012,13 @@ export default function App() {
                         {changePinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinError}</div>}
                         <div className="pin-keypad pin-pad-light" style={{ maxWidth: 200, margin: '0 auto 8px', gap: 10 }}>
                           {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" onClick={() => setChangePinNew(p => p.length < 4 ? p + n : p)}>{n}</button>)}
-                          <button className="pin-key clear" onClick={() => setChangePinNew('')}>✕</button>
+                          <button className="pin-key clear" onClick={() => setChangePinNew('')}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+                          </button>
                           <button className="pin-key" onClick={() => setChangePinNew(p => p.length < 4 ? p + '0' : p)}>0</button>
-                          <button className="pin-key confirm" onClick={() => { if (changePinNew.length === 4) { setChangePinMode('confirm'); setChangePinError(''); } }}>✓</button>
+                          <button className="pin-key confirm" onClick={() => { if (changePinNew.length === 4) { setChangePinMode('confirm'); setChangePinError(''); } }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </button>
                         </div>
                         <button className="pin-toggle" style={{ display: 'block', margin: '0 auto', fontSize: '0.75rem' }} onClick={() => { setChangePinMode('check'); setChangePinNew(''); setChangePinError(''); }}>← Back</button>
                       </>
@@ -967,7 +1034,9 @@ export default function App() {
                         {changePinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinError}</div>}
                         <div className="pin-keypad pin-pad-light" style={{ maxWidth: 200, margin: '0 auto 8px', gap: 10 }}>
                           {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" onClick={() => setChangePinNewConfirm(p => p.length < 4 ? p + n : p)}>{n}</button>)}
-                          <button className="pin-key clear" onClick={() => setChangePinNewConfirm('')}>✕</button>
+                          <button className="pin-key clear" onClick={() => setChangePinNewConfirm('')}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+                          </button>
                           <button className="pin-key" onClick={() => setChangePinNewConfirm(p => p.length < 4 ? p + '0' : p)}>0</button>
                           <button className="pin-key confirm" onClick={async () => {
                             if (changePinNewConfirm.length !== 4) return
@@ -984,7 +1053,9 @@ export default function App() {
                               if (!res.ok) { setChangePinError(res.error); }
                               else { setChangePinMode(null); setChangePinOld(''); setChangePinNew(''); setChangePinNewConfirm(''); setChangePinError(''); showToast('PIN changed'); }
                             } finally { setChangePinLoading(false); }
-                          }}>✓</button>
+                          }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </button>
                         </div>
                         <button className="pin-toggle" style={{ display: 'block', margin: '0 auto', fontSize: '0.75rem' }} onClick={() => { setChangePinMode('setup'); setChangePinNewConfirm(''); setChangePinError(''); }}>← Back</button>
                       </>
@@ -1016,43 +1087,29 @@ export default function App() {
 
               {/* Biometric sub-section */}
               <div>
-                <div className="form-label" style={{ marginBottom: 8 }}>Fingerprint / Face Unlock</div>
+                <div className="form-label" style={{ marginBottom: 8 }}>Fingerprint Unlock</div>
                 {biometricSupported ? (
-                  AUTH.isBiometricEnabled() ? (() => {
-                    if (bioChangeMode === 'enable') {
-                      return (
-                        <>
-                          <div className="form-label" style={{ marginBottom: 8, marginTop: 4, fontSize: '0.72rem' }}>Confirm to enable biometric unlock</div>
-                          <button className="modal-submit" style={{ width: '100%', marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
-                            disabled={bioChangeLoading}
-                            onClick={async () => {
-                              setBioChangeLoading(true)
-                              try {
-                                await AUTH.setupBiometric()
-                                AUTH.setLockEnabled(true)
-                                AUTH.unlock()
-                                setUnlocked(true)
-                                setBioChangeMode(null)
-                                showToast('Biometric unlock enabled')
-                              } catch (e) {
-                                setBioChangeError(e?.message || 'Biometric setup failed')
-                              } finally {
-                                setBioChangeLoading(false)
-                              }
-                            }}>
-                            {bioChangeLoading ? '⏳ Setting up…' : 'Enable'}
-                          </button>
-                          <button className="pin-toggle" style={{ display: 'block', margin: '8px auto 0', fontSize: '0.75rem' }}
-                            onClick={() => { setBioChangeMode(null); setBioChangeError(''); }}>← Back</button>
-                          {bioChangeError && <div className="pin-error" style={{ textAlign: 'center', marginTop: 8, fontSize: '0.75rem' }}>{bioChangeError}</div>}
-                        </>
-                      )
-                    }
-                    return (
+                  AUTH.isBiometricEnabled() ? (
+                    <>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <button className="modal-submit" style={{ flex: 1, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
-                          onClick={() => setBioChangeMode('enable')}>
-                          Re-Enable Biometric
+                          disabled={bioChangeLoading}
+                          onClick={async () => {
+                            setBioChangeLoading(true)
+                            setBioChangeError('')
+                            try {
+                              await AUTH.setupBiometric()
+                              AUTH.setLockEnabled(true)
+                              AUTH.unlock()
+                              setUnlocked(true)
+                              showToast('Biometric unlock enabled')
+                            } catch (e) {
+                              setBioChangeError(e?.message || 'Biometric setup failed')
+                            } finally {
+                              setBioChangeLoading(false)
+                            }
+                          }}>
+                          {bioChangeLoading ? <span className="btn-loading"><FingerprintIcon className="pulse-icon" style={{ width: 16, height: 16 }} /> Setting up…</span> : 'Re-Enable Biometric'}
                         </button>
                         <button className="modal-reset-btn" style={{ fontSize: '0.85rem', padding: '10px 12px' }}
                           onClick={async () => {
@@ -1062,12 +1119,31 @@ export default function App() {
                           Remove Biometric
                         </button>
                       </div>
-                    )
-                  })() : (
-                    <button className="modal-submit" style={{ width: '100%', marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
-                      onClick={() => setBioChangeMode('enable')}>
-                      Enable Fingerprint Unlock
-                    </button>
+                      {bioChangeError && <div className="pin-error" style={{ textAlign: 'center', marginTop: 8, fontSize: '0.75rem' }}>{bioChangeError}</div>}
+                    </>
+                  ) : (
+                    <>
+                      <button className="modal-submit" style={{ width: '100%', marginTop: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
+                        disabled={bioChangeLoading}
+                        onClick={async () => {
+                          setBioChangeLoading(true)
+                          setBioChangeError('')
+                          try {
+                            await AUTH.setupBiometric()
+                            AUTH.setLockEnabled(true)
+                            AUTH.unlock()
+                            setUnlocked(true)
+                            showToast('Biometric unlock enabled')
+                          } catch (e) {
+                            setBioChangeError(e?.message || 'Biometric setup failed')
+                          } finally {
+                            setBioChangeLoading(false)
+                          }
+                        }}>
+                        {bioChangeLoading ? <span className="btn-loading"><FingerprintIcon className="pulse-icon" style={{ width: 16, height: 16 }} /> Setting up…</span> : 'Enable Fingerprint Unlock'}
+                      </button>
+                      {bioChangeError && <div className="pin-error" style={{ textAlign: 'center', marginTop: 8, fontSize: '0.75rem' }}>{bioChangeError}</div>}
+                    </>
                   )
                 ) : (
                   <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>Not supported on this device</span>
@@ -1099,7 +1175,7 @@ export default function App() {
 
           {/* PIN section */}
           <div style={{ marginBottom: 20 }}>
-            <div className="form-label" style={{ marginBottom: 8 }}>PIN Code</div>
+            <div className="form-label" style={{ marginBottom: 8 }}>{lockPinMode === 'setup' ? 'PIN Code' : 'Enter again to confirm'}</div>
             {lockPinMode === 'setup' ? (
               <>
                 <div className="pin-dots" style={{ justifyContent: 'center', gap: 14, marginBottom: 12 }}>
@@ -1112,14 +1188,18 @@ export default function App() {
                   {[1,2,3,4,5,6,7,8,9].map(n => (
                     <button key={n} className="pin-key" onClick={() => setLockPin(p => p.length < 4 ? p + n : p)}>{n}</button>
                   ))}
-                  <button className="pin-key clear" onClick={() => setLockPin('')}>✕</button>
+                  <button className="pin-key clear" onClick={() => setLockPin('')}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+                  </button>
                   <button className="pin-key" onClick={() => setLockPin(p => p.length < 4 ? p + '0' : p)}>0</button>
                   <button className="pin-key confirm" onClick={() => {
                     if (lockPin.length !== 4) return
-                    setLockPinConfirm(lockPin)
+                    setLockPinConfirm('')
                     setLockPinMode('confirm')
                     setLockPinError('')
-                  }}>✓</button>
+                  }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
                 </div>
               </>
             ) : lockPinMode === 'confirm' ? (
@@ -1134,7 +1214,9 @@ export default function App() {
                   {[1,2,3,4,5,6,7,8,9].map(n => (
                     <button key={n} className="pin-key" onClick={() => setLockPinConfirm(p => p.length < 4 ? p + n : p)}>{n}</button>
                   ))}
-                  <button className="pin-key clear" onClick={() => setLockPinConfirm('')}>✕</button>
+                  <button className="pin-key clear" onClick={() => setLockPinConfirm('')}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+                  </button>
                   <button className="pin-key" onClick={() => setLockPinConfirm(p => p.length < 4 ? p + '0' : p)}>0</button>
                   <button className="pin-key confirm" onClick={async () => {
                     if (lockPinConfirm.length !== 4) return
@@ -1152,7 +1234,9 @@ export default function App() {
                     setLockModalOpen(false)
                     setProfileOpen(false)
                     showToast('PIN set — lock enabled')
-                  }}>✓</button>
+                  }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </button>
                 </div>
                 <button className="pin-toggle" style={{ display: 'block', margin: '12px auto 0' }}
                   onClick={() => { setLockPinMode('setup'); setLockPin(''); setLockPinConfirm(''); setLockPinError('') }}>
@@ -1170,7 +1254,7 @@ export default function App() {
           {/* Biometric section */}
           {biometricSupported && (
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: 20 }}>
-              <div className="form-label" style={{ marginBottom: 10 }}>Fingerprint / Face Unlock</div>
+              <div className="form-label" style={{ marginBottom: 10 }}>Fingerprint Unlock</div>
               {AUTH.isBiometricEnabled() ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <span style={{ fontSize: '0.82rem', color: 'var(--muted)' }}>✓ Biometric enabled</span>
@@ -1207,7 +1291,7 @@ export default function App() {
                     }
                   }}
                 >
-                  {biometricLoading ? '⏳ Setting up…' : 'Enable Fingerprint Unlock'}
+                  {biometricLoading ? 'Setting up…' : 'Enable Fingerprint Unlock'}
                 </button>
               )}
             </div>
@@ -1218,7 +1302,9 @@ export default function App() {
             onClick={() => setLockModalOpen(false)}
             style={{ position: 'absolute', top: 16, right: 16, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--muted)', fontSize: '1rem' }}
           >
-            ✕
+            <svg viewBox="0 0 384 512" fill="currentColor" style={{ width: 16, height: 16 }}>
+              <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+            </svg>
           </button>
         </div>
       </div>
@@ -1251,5 +1337,6 @@ export default function App() {
         </div>
       </div>
     </div>
+    </>
   )
 }
