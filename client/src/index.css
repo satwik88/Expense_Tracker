@@ -1514,14 +1514,14 @@ body {
   color: #fff;
 }
 
-/* â”€â”€ Toast â”€â”€ */
+/* ── Toast ── */
 .toast {
   position: fixed;
   bottom: 100px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
   background: var(--text);
-  color: #fff;
+  color: var(--bg);
   padding: 12px 24px;
   border-radius: 12px;
   font-size: 0.85rem;

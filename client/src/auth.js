@@ -47,7 +47,7 @@ export const AUTH = {
   async setupBiometric() {
     const { auth } = await getPlugin()
     if (auth) {
-      const result = await auth.authenticate({
+      const result = await auth.register({
         reason: 'Confirm to enable biometric unlock',
         title: 'Biometric Setup',
         fallbackTitle: 'Use PIN instead',

@@ -122,6 +122,7 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false)
 
   const historyScrollRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   // Theme effect — sync attribute and resolve
   useEffect(() => {
@@ -399,6 +400,62 @@ export default function App() {
     saveEntries(updated)
     setEntries(updated)
     showToast('Entry deleted')
+  }
+
+  async function exportData() {
+    const data = localStorage.getItem(STORAGE_KEY) || '[]';
+    const blob = new Blob([data], { type: 'application/json' });
+    const file = new File([blob], 'expense_tracker_backup.json', { type: 'application/json' });
+    
+    const fallbackDownload = () => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'expense_tracker_backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Export downloaded');
+    };
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: 'Expense Tracker Backup',
+        });
+        showToast('Export successful');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed, falling back to download:', err);
+          fallbackDownload();
+        }
+      }
+    } else {
+      fallbackDownload();
+    }
+  }
+
+  function handleImport(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (Array.isArray(data)) {
+           saveEntries(data);
+           setEntries(data);
+           showToast('Data imported successfully');
+           setProfileOpen(false);
+        } else {
+           showToast('Invalid backup file');
+        }
+      } catch (err) {
+         showToast('Failed to parse backup');
+      }
+      e.target.value = null;
+    };
+    reader.readAsText(file);
   }
 
   function handleResetAllData() {
@@ -957,6 +1014,29 @@ export default function App() {
 
           {/* Reset Data */}
           <div className="profile-section-title">Data</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <button
+              className="modal-submit"
+              style={{ flex: 1, margin: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+              onClick={exportData}
+            >
+              Export
+            </button>
+            <button
+              className="modal-submit"
+              style={{ flex: 1, margin: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)' }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Import
+            </button>
+            <input 
+              type="file" 
+              accept=".json" 
+              ref={fileInputRef} 
+              style={{ display: 'none' }} 
+              onChange={handleImport} 
+            />
+          </div>
           <button
             className="modal-reset-btn"
             style={{ width: '100%', marginTop: 0 }}

@@ -1,0 +1,441 @@
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/.transforms/55216777539db699374b4e265321a64f/results.bin b/node_modules/capacitor-biometric-authentication/android/build/.transforms/55216777539db699374b4e265321a64f/results.bin
+new file mode 100644
+index 0000000..7ed749e
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/.transforms/55216777539db699374b4e265321a64f/results.bin
+@@ -0,0 +1 @@
++o/bundleLibRuntimeToDirDebug
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/.transforms/55216777539db699374b4e265321a64f/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin b/node_modules/capacitor-biometric-authentication/android/build/.transforms/55216777539db699374b4e265321a64f/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin
+new file mode 100644
+index 0000000..65de530
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/.transforms/55216777539db699374b4e265321a64f/transformed/bundleLibRuntimeToDirDebug/desugar_graph.bin differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/.transforms/b318cb18735896b44537117973b5f6e4/results.bin b/node_modules/capacitor-biometric-authentication/android/build/.transforms/b318cb18735896b44537117973b5f6e4/results.bin
+new file mode 100644
+index 0000000..0d259dd
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/.transforms/b318cb18735896b44537117973b5f6e4/results.bin
+@@ -0,0 +1 @@
++o/classes
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/.transforms/b318cb18735896b44537117973b5f6e4/transformed/classes/classes_dex/classes.dex b/node_modules/capacitor-biometric-authentication/android/build/.transforms/b318cb18735896b44537117973b5f6e4/transformed/classes/classes_dex/classes.dex
+new file mode 100644
+index 0000000..70f6e63
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/.transforms/b318cb18735896b44537117973b5f6e4/transformed/classes/classes_dex/classes.dex differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/generated/source/buildConfig/debug/com/aoneahsan/capacitor/biometricauth/BuildConfig.java b/node_modules/capacitor-biometric-authentication/android/build/generated/source/buildConfig/debug/com/aoneahsan/capacitor/biometricauth/BuildConfig.java
+new file mode 100644
+index 0000000..37c56a4
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/generated/source/buildConfig/debug/com/aoneahsan/capacitor/biometricauth/BuildConfig.java
+@@ -0,0 +1,10 @@
++/**
++ * Automatically generated file. DO NOT MODIFY
++ */
++package com.aoneahsan.capacitor.biometricauth;
++
++public final class BuildConfig {
++  public static final boolean DEBUG = Boolean.parseBoolean("true");
++  public static final String LIBRARY_PACKAGE_NAME = "com.aoneahsan.capacitor.biometricauth";
++  public static final String BUILD_TYPE = "debug";
++}
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+new file mode 100644
+index 0000000..52cbd22
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+@@ -0,0 +1,16 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.aoneahsan.capacitor.biometricauth" >
++
++    <uses-sdk android:minSdkVersion="24" />
++
++    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
++    <!--
++         Legacy fingerprint permission for pre-Android 10 (API <= 28). USE_BIOMETRIC
++         covers API 29+. Neither is a sensitive/Play-reviewed permission.
++    -->
++    <uses-permission
++        android:name="android.permission.USE_FINGERPRINT"
++        android:maxSdkVersion="28" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+new file mode 100644
+index 0000000..7834205
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/output-metadata.json
+@@ -0,0 +1,18 @@
++{
++  "version": 3,
++  "artifactType": {
++    "type": "AAPT_FRIENDLY_MERGED_MANIFESTS",
++    "kind": "Directory"
++  },
++  "applicationId": "com.aoneahsan.capacitor.biometricauth",
++  "variantName": "debug",
++  "elements": [
++    {
++      "type": "SINGLE",
++      "filters": [],
++      "attributes": [],
++      "outputFile": "AndroidManifest.xml"
++    }
++  ],
++  "elementType": "File"
++}
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar
+new file mode 100644
+index 0000000..d8852b7
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+new file mode 100644
+index 0000000..1211b1e
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/aar_metadata/debug/writeDebugAarMetadata/aar-metadata.properties
+@@ -0,0 +1,6 @@
++aarFormatVersion=1.0
++aarMetadataVersion=1.0
++minCompileSdk=1
++minCompileSdkExtension=0
++minAndroidGradlePluginVersion=1.0.0
++coreLibraryDesugaringEnabled=false
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json b/node_modules/capacitor-biometric-authentication/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+new file mode 100644
+index 0000000..9e26dfe
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/annotation_processor_list/debug/javaPreCompileDebug/annotationProcessors.json
+@@ -0,0 +1 @@
++{}
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt b/node_modules/capacitor-biometric-authentication/android/build/intermediates/annotations_typedef_file/debug/extractDebugAnnotations/typedefs.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar b/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar
+new file mode 100644
+index 0000000..568e4ee
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_library_classes_jar/debug/bundleLibCompileToJarDebug/classes.jar differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar b/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar
+new file mode 100644
+index 0000000..bfe4b85
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_r_class_jar/debug/generateDebugRFile/R.jar differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt b/node_modules/capacitor-biometric-authentication/android/build/intermediates/compile_symbol_list/debug/generateDebugRFile/R.txt
+new file mode 100644
+index 0000000..e69de29
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state
+new file mode 100644
+index 0000000..1c983fc
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug-mergeJavaRes/merge-state differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+new file mode 100644
+index 0000000..64b56e7
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug/packageDebugResources/compile-file-map.properties
+@@ -0,0 +1 @@
++#Wed Sep 02 02:37:07 IST 2026
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+new file mode 100644
+index 0000000..5374894
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/debug/packageDebugResources/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="main" generated-set="main$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\debug\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="debug" generated-set="debug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\debug\res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\build\generated\res\resValues\debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\build\generated\res\resValues\debug"/></dataSet><mergedItems/></merger>
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugAssets/merger.xml b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugAssets/merger.xml
+new file mode 100644
+index 0000000..e48f39e
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugAssets/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\assets"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\debug\assets"/></dataSet><dataSet config="generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\build\intermediates\shader_assets\debug\compileDebugShaders\out"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+new file mode 100644
+index 0000000..52182a9
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugJniLibFolders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\jniLibs"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\debug\jniLibs"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugShaders/merger.xml b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+new file mode 100644
+index 0000000..91d1161
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/incremental/mergeDebugShaders/merger.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<merger version="3"><dataSet config="main" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\shaders"/></dataSet><dataSet config="debug" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\debug\shaders"/></dataSet></merger>
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$1.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$1.class
+new file mode 100644
+index 0000000..6d544e4
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$1.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$2.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$2.class
+new file mode 100644
+index 0000000..c71d9ad
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$2.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin.class
+new file mode 100644
+index 0000000..5203832
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BuildConfig.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BuildConfig.class
+new file mode 100644
+index 0000000..093bc48
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/com/aoneahsan/capacitor/biometricauth/BuildConfig.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt b/node_modules/capacitor-biometric-authentication/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+new file mode 100644
+index 0000000..78ac5b8
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/local_only_symbol_list/debug/parseDebugLocalResources/R-def.txt
+@@ -0,0 +1,2 @@
++R_DEF: Internal format may change without notice
++local
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt b/node_modules/capacitor-biometric-authentication/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+new file mode 100644
+index 0000000..80bc3fb
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/manifest_merge_blame_file/debug/processDebugManifest/manifest-merger-blame-debug-report.txt
+@@ -0,0 +1,21 @@
++1<?xml version="1.0" encoding="utf-8"?>
++2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++3    package="com.aoneahsan.capacitor.biometricauth" >
++4
++5    <uses-sdk android:minSdkVersion="24" />
++6
++7    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
++7-->C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:5:5-72
++7-->C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:5:22-69
++8    <!--
++9         Legacy fingerprint permission for pre-Android 10 (API <= 28). USE_BIOMETRIC
++10         covers API 29+. Neither is a sensitive/Play-reviewed permission.
++11    -->
++12    <uses-permission
++12-->C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:8:5-101
++13        android:name="android.permission.USE_FINGERPRINT"
++13-->C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:8:22-71
++14        android:maxSdkVersion="28" />
++14-->C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:8:72-98
++15
++16</manifest>
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-capacitor-biometric-authentication.jar b/node_modules/capacitor-biometric-authentication/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-capacitor-biometric-authentication.jar
+new file mode 100644
+index 0000000..15cb0ec
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/merged_java_res/debug/mergeDebugJavaResource/feature-capacitor-biometric-authentication.jar differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml b/node_modules/capacitor-biometric-authentication/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+new file mode 100644
+index 0000000..52cbd22
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+@@ -0,0 +1,16 @@
++<?xml version="1.0" encoding="utf-8"?>
++<manifest xmlns:android="http://schemas.android.com/apk/res/android"
++    package="com.aoneahsan.capacitor.biometricauth" >
++
++    <uses-sdk android:minSdkVersion="24" />
++
++    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
++    <!--
++         Legacy fingerprint permission for pre-Android 10 (API <= 28). USE_BIOMETRIC
++         covers API 29+. Neither is a sensitive/Play-reviewed permission.
++    -->
++    <uses-permission
++        android:name="android.permission.USE_FINGERPRINT"
++        android:maxSdkVersion="28" />
++
++</manifest>
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json b/node_modules/capacitor-biometric-authentication/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+new file mode 100644
+index 0000000..0637a08
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/navigation_json/debug/extractDeepLinksDebug/navigation.json
+@@ -0,0 +1 @@
++[]
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt b/node_modules/capacitor-biometric-authentication/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+new file mode 100644
+index 0000000..08f4ebe
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/nested_resources_validation_report/debug/generateDebugResources/nestedResourcesValidationReport.txt
+@@ -0,0 +1 @@
++0 Warning/Error
+\ No newline at end of file
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$1.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$1.class
+new file mode 100644
+index 0000000..6d544e4
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$1.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$2.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$2.class
+new file mode 100644
+index 0000000..c71d9ad
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin$2.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin.class
+new file mode 100644
+index 0000000..5203832
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BiometricAuthPlugin.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BuildConfig.class b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BuildConfig.class
+new file mode 100644
+index 0000000..093bc48
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_dir/debug/bundleLibRuntimeToDirDebug/com/aoneahsan/capacitor/biometricauth/BuildConfig.class differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar
+new file mode 100644
+index 0000000..023ab74
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt b/node_modules/capacitor-biometric-authentication/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+new file mode 100644
+index 0000000..f8cb069
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/intermediates/symbol_list_with_package_name/debug/generateDebugRFile/package-aware-r.txt
+@@ -0,0 +1 @@
++com.aoneahsan.capacitor.biometricauth
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/outputs/aar/capacitor-biometric-authentication-debug.aar b/node_modules/capacitor-biometric-authentication/android/build/outputs/aar/capacitor-biometric-authentication-debug.aar
+new file mode 100644
+index 0000000..2b0728b
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/outputs/aar/capacitor-biometric-authentication-debug.aar differ
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/outputs/logs/manifest-merger-debug-report.txt b/node_modules/capacitor-biometric-authentication/android/build/outputs/logs/manifest-merger-debug-report.txt
+new file mode 100644
+index 0000000..617ac79
+--- /dev/null
++++ b/node_modules/capacitor-biometric-authentication/android/build/outputs/logs/manifest-merger-debug-report.txt
+@@ -0,0 +1,27 @@
++-- Merging decision tree log ---
++manifest
++ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:2:1-10:12
++INJECTED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:2:1-10:12
++	package
++		ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:3:5-52
++		INJECTED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml
++	xmlns:android
++		ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:2:11-69
++uses-permission#android.permission.USE_BIOMETRIC
++ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:5:5-72
++	android:name
++		ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:5:22-69
++uses-permission#android.permission.USE_FINGERPRINT
++ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:8:5-101
++	android:maxSdkVersion
++		ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:8:72-98
++	android:name
++		ADDED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml:8:22-71
++uses-sdk
++INJECTED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml reason: use-sdk injection requested
++INJECTED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml
++INJECTED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml
++	android:targetSdkVersion
++		INJECTED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml
++	android:minSdkVersion
++		INJECTED from C:\Users\satwi\Expense Tracker\money-tracker\client\node_modules\capacitor-biometric-authentication\android\src\main\AndroidManifest.xml
+diff --git a/node_modules/capacitor-biometric-authentication/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin b/node_modules/capacitor-biometric-authentication/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin
+new file mode 100644
+index 0000000..e7f93e8
+Binary files /dev/null and b/node_modules/capacitor-biometric-authentication/android/build/tmp/compileDebugJavaWithJavac/previous-compilation-data.bin differ
+diff --git a/node_modules/capacitor-biometric-authentication/dist/esm/adapters/CapacitorAdapter.js b/node_modules/capacitor-biometric-authentication/dist/esm/adapters/CapacitorAdapter.js
+index bef31fc..923fd22 100644
+--- a/node_modules/capacitor-biometric-authentication/dist/esm/adapters/CapacitorAdapter.js
++++ b/node_modules/capacitor-biometric-authentication/dist/esm/adapters/CapacitorAdapter.js
+@@ -108,6 +108,32 @@ export class CapacitorAdapter {
+                 error: this.mapError(error),
+             };
+         }
++    }
++        async register(options) {
++        try {
++            const plugin = (await this.getPlugin());
++            const capacitorOptions = Object.assign({ reason: (options?.reason) || 'Authenticate to continue', cancelTitle: options?.cancelTitle, fallbackTitle: options?.fallbackTitle, disableDeviceCredential: options?.disableDeviceCredential, maxAttempts: options?.maxAttempts, requireConfirmation: options?.requireConfirmation }, (options?.platform?.android || {}), (options?.platform?.ios || {}));
++            const result = (await plugin.register(capacitorOptions));
++            if (result.success) {
++                return {
++                    success: true,
++                    biometryType: this.mapBiometryType(result.biometryType),
++                    sessionId: result.sessionId || '',
++                    token: result.token,
++                    platform: 'capacitor',
++                };
++            }
++            return {
++                success: false,
++                error: this.mapError(result.error),
++            };
++        }
++        catch (error) {
++            return {
++                success: false,
++                error: this.mapError(error),
++            };
++        }
+     }
+     async deleteCredentials() {
+         try {
+@@ -202,3 +228,4 @@ export class CapacitorAdapter {
+         };
+     }
+ }
++
+diff --git a/node_modules/capacitor-biometric-authentication/dist/esm/adapters/WebAdapter.js b/node_modules/capacitor-biometric-authentication/dist/esm/adapters/WebAdapter.js
+index 96a1955..ea957ae 100644
+--- a/node_modules/capacitor-biometric-authentication/dist/esm/adapters/WebAdapter.js
++++ b/node_modules/capacitor-biometric-authentication/dist/esm/adapters/WebAdapter.js
+@@ -95,6 +95,9 @@ export class WebAdapter {
+             // Propagate real failure modes (user cancel, RP mismatch, etc.) — never swallow.
+             return createErrorResult(error);
+         }
++    }
++        async register(options) {
++        return this.authenticate(options);
+     }
+     async deleteCredentials() {
+         if (typeof localStorage !== 'undefined') {
+@@ -253,3 +256,4 @@ export class WebAdapter {
+         }
+     }
+ }
++
+diff --git a/node_modules/capacitor-biometric-authentication/dist/esm/core/BiometricAuthCore.js b/node_modules/capacitor-biometric-authentication/dist/esm/core/BiometricAuthCore.js
+index 95806b7..7117220 100644
+--- a/node_modules/capacitor-biometric-authentication/dist/esm/core/BiometricAuthCore.js
++++ b/node_modules/capacitor-biometric-authentication/dist/esm/core/BiometricAuthCore.js
+@@ -182,6 +182,25 @@ export class BiometricAuthCore {
+             });
+             return errorResult;
+         }
++    }
++        async register(options) {
++        if (!this.currentAdapter) {
++            await this.ensureInitialized();
++        }
++        if (!this.currentAdapter) {
++            return {
++                success: false,
++                error: {
++                    code: BiometricErrorCode.NOT_AVAILABLE,
++                    message: 'No biometric adapter available for this platform.',
++                },
++            };
++        }
++        if (typeof this.currentAdapter.register === 'function') {
++            return await this.currentAdapter.register(options);
++        }
++        // Fallback to authenticate if adapter doesn't implement register
++        return await this.currentAdapter.authenticate(options);
+     }
+     async deleteCredentials() {
+         await this.ensureInitialized();
+@@ -280,3 +299,4 @@ export class BiometricAuthCore {
+         return callback();
+     }
+ }
++
+diff --git a/node_modules/capacitor-biometric-authentication/dist/esm/index.js b/node_modules/capacitor-biometric-authentication/dist/esm/index.js
+index 7184e8d..f3c39ff 100644
+--- a/node_modules/capacitor-biometric-authentication/dist/esm/index.js
++++ b/node_modules/capacitor-biometric-authentication/dist/esm/index.js
+@@ -8,6 +8,7 @@ const BiometricAuth = {
+     isAvailable: () => biometricAuth.isAvailable(),
+     getSupportedBiometrics: () => biometricAuth.getSupportedBiometrics(),
+     authenticate: (options) => biometricAuth.authenticate(options),
++    register: (options) => biometricAuth.register(options),
+     deleteCredentials: () => biometricAuth.deleteCredentials(),
+     hasCredentials: () => biometricAuth.hasCredentials(),
+     // State management
