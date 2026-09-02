@@ -25,15 +25,44 @@ export default function DatePicker({ value, onChange }) {
   
   // Track the month currently being viewed in the calendar
   const [currentMonth, setCurrentMonth] = useState(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
+  const [slideDirection, setSlideDirection] = useState('right');
+
+  // Touch states for swipe gesture
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const minSwipeDistance = 40;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe) {
+      handleNextMonth();
+    } else if (isRightSwipe) {
+      handlePrevMonth();
+    }
+  };
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
 
   const handlePrevMonth = () => {
+    setSlideDirection('left');
     setCurrentMonth(new Date(year, month - 1, 1));
   };
 
   const handleNextMonth = () => {
+    setSlideDirection('right');
     setCurrentMonth(new Date(year, month + 1, 1));
   };
 
@@ -93,7 +122,12 @@ export default function DatePicker({ value, onChange }) {
       </button>
 
       {isOpen && (
-        <div className="custom-calendar popup">
+        <div 
+          className="custom-calendar popup"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           <div className="calendar-header">
             <button type="button" className="cal-nav-btn" onClick={handlePrevMonth}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
@@ -110,8 +144,9 @@ export default function DatePicker({ value, onChange }) {
             </button>
           </div>
 
-          <div className="calendar-weekdays">
-            {DAY_NAMES.map(d => <div key={d}>{d}</div>)}
+          <div className={`calendar-body slide-in-${slideDirection}`} key={currentMonth.toISOString()}>
+            <div className="calendar-weekdays">
+              {DAY_NAMES.map(d => <div key={d}>{d}</div>)}
           </div>
 
           <div className="calendar-grid">
@@ -132,6 +167,7 @@ export default function DatePicker({ value, onChange }) {
                 </button>
               );
             })}
+          </div>
           </div>
         </div>
       )}

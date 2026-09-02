@@ -71,6 +71,81 @@ const renderActiveShape = (props) => {
   );
 };
 
+function SwipeableTxItem({ entry, onDelete }) {
+  const meta = getCatMeta(entry.category)
+  const isDeposit = entry.type === 'deposit'
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const startX = useRef(null)
+  const isDragging = useRef(false)
+
+  const handleStart = (clientX) => {
+    startX.current = clientX
+    isDragging.current = false
+  }
+
+  const handleMove = (clientX) => {
+    if (startX.current === null) return
+    const diff = clientX - startX.current
+    if (Math.abs(diff) > 5) {
+      isDragging.current = true
+    }
+    if (diff < 0) {
+      setSwipeOffset(Math.max(diff, -80))
+    } else if (swipeOffset < 0) {
+      setSwipeOffset(Math.min(diff - 80, 0))
+    }
+  }
+
+  const handleEnd = () => {
+    if (startX.current !== null && isDragging.current) {
+      if (swipeOffset < -40) {
+        setSwipeOffset(-80)
+      } else {
+        setSwipeOffset(0)
+      }
+    }
+    startX.current = null
+  }
+
+  const handleClick = () => {
+    if (!isDragging.current) {
+      setSwipeOffset(prev => prev === 0 ? -80 : 0)
+    }
+  }
+
+  return (
+    <div style={{ position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius)', marginBottom: '8px' }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, background: 'var(--red)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '20px', borderRadius: 'var(--radius)' }}>
+        <button onClick={() => onDelete(entry.id)} style={{ color: '#fff', background: 'none', border: 'none', fontSize: '1rem', fontWeight: 600, cursor: 'pointer', height: '100%' }}>Delete</button>
+      </div>
+      <div 
+        className="tx-item" 
+        style={{ transform: `translateX(${swipeOffset}px)`, transition: startX.current === null ? 'transform 0.2s' : 'none', margin: 0, position: 'relative', zIndex: 1, backgroundColor: 'var(--card)', cursor: 'pointer' }}
+        onTouchStart={(e) => handleStart(e.touches[0].clientX)}
+        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+        onTouchEnd={handleEnd}
+        onMouseDown={(e) => handleStart(e.clientX)}
+        onMouseMove={(e) => startX.current !== null && handleMove(e.clientX)}
+        onMouseUp={handleEnd}
+        onMouseLeave={() => { if(startX.current !== null) handleEnd() }}
+        onClick={handleClick}
+      >
+        <div className="tx-icon">{meta.emoji}</div>
+        <div className="tx-details">
+          <div className="tx-category">{entry.category}</div>
+          <div className="tx-type">{entry.note || (isDeposit ? 'Credited' : 'Spent')}</div>
+        </div>
+        <div className="tx-right">
+          <div className={`tx-amount ${isDeposit ? 'green' : 'red'}`}>
+            {isDeposit ? '+' : '−'}{fmt(entry.amount)}
+          </div>
+          <div className="tx-date">{formatDate(entry.date)}</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const [entries, setEntries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -202,7 +277,7 @@ export default function App() {
   }, [unlocked])
 
   // ── Stats / Calendar helpers ──
-  const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa']
+  const DAYS = ['Mo','Tu','We','Th','Fr','Sa','Su']
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
   const getWeekStart = (d) => {
@@ -283,13 +358,28 @@ export default function App() {
   const buildCalendarDays = () => {
     const d = statsDate
     const year = d.getFullYear(), month = d.getMonth()
-    const firstDay = new Date(year, month, 1).getDay()
+    
+    // Monday-first indexing
+    let firstDayIdx = new Date(year, month, 1).getDay()
+    firstDayIdx = firstDayIdx === 0 ? 6 : firstDayIdx - 1
+    
     const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const daysInPrevMonth = new Date(year, month, 0).getDate()
+    
     const todayKey = fmtDateKey(new Date())
+    const selectedKey = fmtDateKey(statsDate)
     const rangeStart = new Date(year, month, 1)
     const rangeEnd = new Date(year, month + 1, 1)
+    
     const days = []
-    for (let i = 0; i < firstDay; i++) days.push(null)
+    
+    // Previous month padding
+    for (let i = 0; i < firstDayIdx; i++) {
+      const prevDay = daysInPrevMonth - firstDayIdx + i + 1
+      days.push({ day: prevDay, isCurrentMonth: false })
+    }
+    
+    // Current month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day)
       const key = fmtDateKey(date)
@@ -297,8 +387,15 @@ export default function App() {
         const td = new Date(tx.date)
         return td >= rangeStart && td < rangeEnd && fmtDateKey(td) === key
       })
-      days.push({ day, key, hasTx, isToday: key === todayKey })
+      days.push({ day, key, hasTx, isToday: key === todayKey, isSelected: key === selectedKey, isCurrentMonth: true })
     }
+    
+    // Next month padding (fill exactly 6 rows = 42 days)
+    const remaining = 42 - days.length
+    for (let i = 1; i <= remaining; i++) {
+      days.push({ day: i, isCurrentMonth: false })
+    }
+    
     return { days, year, month }
   }
 
@@ -347,7 +444,7 @@ export default function App() {
 
   const chartData = getPieChartData()
 
-  // Summary stats
+  // Summary stats (Home screen always shows current real-world month)
   const now = new Date()
   const thisMonth = now.getMonth()
   const thisYear = now.getFullYear()
@@ -362,7 +459,10 @@ export default function App() {
 
   // History view filters (category) + sorts newest first
   const historyFiltered = historyFilter === 'all' ? [...entries] : [...entries].filter(e => e.category === historyFilter)
-  const historySorted = historyFiltered.sort((a, b) => new Date(b.date) - new Date(a.date))
+  const historySorted = historyFiltered.sort((a, b) => {
+    const dDiff = new Date(b.date) - new Date(a.date)
+    return dDiff !== 0 ? dDiff : Number(b.id) - Number(a.id)
+  })
 
   // ── Category auto-suggest ──
   const suggestedCat = categoryInput.trim() ? autoCategorize(categoryInput) : null
@@ -503,9 +603,13 @@ export default function App() {
           </div>
         </div>
         <div className="header-right">
-          <div className="avatar" title={profileOpen ? 'Save & close' : 'Edit name'} onClick={() => {
-            if (profileOpen) { AUTH.lock(); setProfileOpen(false); }
-            else { setEditName(userName); setProfileOpen(true); }
+          <div className="avatar" title="Edit profile" onClick={() => {
+            if (profileOpen) {
+              setProfileOpen(false);
+            } else {
+              setEditName(userName);
+              setProfileOpen(true);
+            }
           }}>
             <MorphIcon icon={profileOpen ? X : User} />
           </div>
@@ -522,15 +626,15 @@ export default function App() {
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-label">Credited</div>
-          <div className="stat-value green">{fmt(totalCredited)}</div>
+          <div className="stat-value green">{fmt(navView === 'stats' ? statsData.credited : totalCredited)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Spent</div>
-          <div className="stat-value red">{fmt(totalSpent)}</div>
+          <div className="stat-value red">{fmt(navView === 'stats' ? statsData.spent : totalSpent)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Total</div>
-          <div className="stat-value">{fmt(net)}</div>
+          <div className="stat-value">{fmt(navView === 'stats' ? statsData.net : net)}</div>
         </div>
       </div>
 
@@ -560,13 +664,18 @@ export default function App() {
                 <div className="cal-header">
                   {DAYS.map(d => <span key={d} className="cal-dow">{d}</span>)}
                 </div>
-                {days.map((cell, i) => cell ? (
-                  <button key={i} className={`cal-day ${cell.isToday ? 'today' : ''} ${cell.hasTx ? 'has-tx' : ''}`}
-                    onClick={() => { setStatsDate(new Date(cell.key + 'T00:00:00')); setStatsView('day') }}>
+                {days.map((cell, i) => (
+                  <button key={i} className={`cal-day ${cell.isCurrentMonth ? '' : 'other-month'} ${cell.isToday ? 'today' : ''} ${cell.isSelected && cell.isCurrentMonth ? 'selected' : ''}`}
+                    onClick={() => { 
+                      if (cell.isCurrentMonth) {
+                        setStatsDate(new Date(cell.key + 'T00:00:00')); 
+                        setStatsView('day');
+                      }
+                    }}>
                     <span className="cal-day-num">{cell.day}</span>
-                    {cell.hasTx && <span className="cal-dot" />}
+                    {cell.hasTx && cell.isCurrentMonth && <span className="cal-dot" />}
                   </button>
-                ) : <div key={i} />)}
+                ))}
               </div>
             )
           })()}
@@ -797,38 +906,9 @@ export default function App() {
             <p>No transactions yet.</p>
           </div>
         ) : (
-          historySorted.map(entry => {
-            const meta = getCatMeta(entry.category)
-            const isDeposit = entry.type === 'deposit'
-            return (
-              <div className="tx-item" key={entry.id}>
-                <div className="tx-icon">{meta.emoji}</div>
-                <div className="tx-details">
-                  <div className="tx-category">{entry.category}</div>
-                  <div className="tx-type">{entry.note || (isDeposit ? 'Credited' : 'Spent')}</div>
-                </div>
-                <div className="tx-right">
-                  <div className={`tx-amount ${isDeposit ? 'green' : 'red'}`}>
-                    {isDeposit ? '+' : '−'}{fmt(entry.amount)}
-                  </div>
-                  <div className="tx-date">{formatDate(entry.date)}</div>
-                </div>
-                <button
-                  className={`tx-delete${pendingDeleteId === entry.id ? ' confirming' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    if (pendingDeleteId === entry.id) {
-                      handleDelete(entry.id)
-                      setPendingDeleteId(null)
-                    } else {
-                      setPendingDeleteId(entry.id)
-                    }
-                  }}
-                  title={pendingDeleteId === entry.id ? 'Tap again to confirm delete' : 'Delete'}
-                >✕</button>
-              </div>
-            )
-          })
+          historySorted.map(entry => (
+            <SwipeableTxItem key={entry.id} entry={entry} onDelete={handleDelete} />
+          ))
         )}
       </div>
       </>}
@@ -962,7 +1042,6 @@ export default function App() {
       <div className={`profile-modal ${profileOpen ? 'open' : ''}`} onClick={(e) => { if (e.target.classList.contains('profile-backdrop')) setProfileOpen(false) }}>
         <div className="profile-backdrop" />
         <div className="profile-drawer">
-
           <div className="modal-title" style={{ marginTop: 8 }}>Welcome</div>
 
           {/* Name */}
