@@ -1,5 +1,4 @@
-/* â”€â”€ Reset & Base â”€â”€ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* --- Reset & Base --- */
 
 * {
   margin: 0;
@@ -7,7 +6,7 @@
   box-sizing: border-box;
 }
 
-/* â”€â”€ Light Theme (default) â”€â”€ */
+/* --- Light Theme (default) --- */
 :root {
   --bg: #F5F5F5;
   --bg-alpha: rgba(245, 245, 245, 0.88);
@@ -30,7 +29,7 @@
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
 }
 
-/* â”€â”€ Dark Theme â”€â”€ */
+/* --- Dark Theme --- */
 [data-theme="dark"] {
   --bg: #0D0D0D;
   --bg-alpha: rgba(13, 13, 13, 0.88);
@@ -59,7 +58,7 @@ body {
   overflow-x: hidden;
 }
 
-/* â”€â”€ App Shell â”€â”€ */
+/* --- App Shell --- */
 .app {
   max-width: 480px;
   margin: 0 auto;
@@ -438,7 +437,7 @@ body {
   width: 100%;
 }
 
-/* â”€â”€ Top Header â”€â”€ */
+/* --- Top Header --- */
 .top-header {
   display: flex;
   align-items: center;
@@ -504,7 +503,7 @@ body {
   height: 20px;
 }
 
-/* â”€â”€ Balance Card â”€â”€ */
+/* --- Balance Card --- */
 .balance-card {
   margin: 8px 20px 0;
   background: var(--card-dk);
@@ -571,7 +570,7 @@ body {
   z-index: 1;
 }
 
-/* â”€â”€ Quick Stats Row â”€â”€ */
+/* --- Quick Stats Row --- */
 .stats-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -614,7 +613,7 @@ body {
   color: var(--red);
 }
 
-/* â”€â”€ Chart Card â”€â”€ */
+/* --- Chart Card --- */
 .chart-card {
   margin: 14px 20px 0;
   background: var(--card-dk);
@@ -1808,7 +1807,7 @@ body {
   margin: 0 20px 12px;
 }
 
-/* â”€â”€ Profile Modal (right-side drawer) â”€â”€ */
+/* --- Profile Modal (right-side drawer) --- */
 .profile-modal {
   position: fixed;
   inset: 0;

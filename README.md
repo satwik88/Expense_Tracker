@@ -72,8 +72,9 @@ A personal expense and income tracker built as a native Android app. Track depos
 All data is stored locally on the device. There are no user accounts, no server, and no cloud sync. This means:
 
 - **Private by default** — nobody but you can see your transactions.
-- **Per-device** — data is tied to the device and app install.
-- **Offline only** — the app works completely without an internet connection.
+- **Per-device** — data is tied to the device and app install. Switching phones or reinstalling the app will start fresh unless you manually back up the data (Profile → Export).
+- **Offline only** — the app makes no network requests at runtime. The Inter font is bundled through `@fontsource/inter` instead of Google Fonts, and the Android build declares no `INTERNET` permission.
+- **Not encrypted** — the optional PIN / biometric app lock is a UI gate, not encryption. The transaction data is still readable from the app's local storage by anyone with access to the device's app data. Use the lock to keep casual snoopers out, not as data encryption.
 
 > **Note:** Reinstalling the app (uninstall → reinstall) or changing the app's package name / signing key will reset local data. Always **update over** the existing install (never uninstall first) to preserve your data, and use **Export Data** before major updates as a safety net.
 
