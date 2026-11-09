@@ -3,7 +3,7 @@ import { App as CapApp } from '@capacitor/app'
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Sector
 } from 'recharts'
-import { getCatMeta, autoCategorize, CATEGORIES, getRandomGreeting } from './categories'
+import { getCatMeta, autoCategorize, CATEGORIES, getRandomGreeting, NEUTRAL_CATEGORIES } from './categories'
 import { AUTH } from './auth'
 import LockScreen from './LockScreen'
 import { MorphIcon } from "morphicons/react"
@@ -345,11 +345,14 @@ export default function App() {
       const d = parseLocalKey(e.date)
       return d >= start && d < endExclusive
     })
-    const credited = inRange.filter(e => e.type === 'deposit').reduce((s, e) => s + e.amount, 0)
-    const spent = inRange.filter(e => e.type === 'withdrawal').reduce((s, e) => s + e.amount, 0)
+    const isNeutral = (e) => NEUTRAL_CATEGORIES.includes(e.category)
+    // Lent / Transfers are cash movement, not income or spending.
+    const credited = inRange.filter(e => e.type === 'deposit' && !isNeutral(e)).reduce((s, e) => s + e.amount, 0)
+    const spent = inRange.filter(e => e.type === 'withdrawal' && !isNeutral(e)).reduce((s, e) => s + e.amount, 0)
+    const neutralTotal = inRange.filter(isNeutral).reduce((s, e) => s + e.amount, 0)
     const net = credited - spent
     const grouped = {}
-    inRange.filter(e => e.type === 'withdrawal').forEach(e => {
+    inRange.filter(e => e.type === 'withdrawal' && !isNeutral(e)).forEach(e => {
       grouped[e.category] = (grouped[e.category] || 0) + e.amount
     })
     const total = Object.values(grouped).reduce((s, v) => s + v, 0)
@@ -357,7 +360,7 @@ export default function App() {
       category, name: category, value: amount,
       pct: total ? ((amount / total) * 100).toFixed(0) : '0'
     })).sort((a, b) => b.value - a.value)
-    return { credited, spent, net, pieData, count: inRange.length }
+    return { credited, spent, net, pieData, neutralTotal, count: inRange.length }
   }
 
   const statsRange = (() => {
@@ -514,7 +517,15 @@ export default function App() {
     } else {
       start = new Date(now.getFullYear(), now.getMonth(), 1)
     }
-    const withdrawals = entries.filter(e => e.type === 'withdrawal' && parseLocalKey(e.date) >= start)
+    const withdrawals = entries.filter(e => {
+      if (e.type !== 'withdrawal' || NEUTRAL_CATEGORIES.includes(e.category)) return false
+      const d = parseLocalKey(e.date)
+      // Monthly must match the Spent card exactly (same calendar month).
+      if (chartRange === 'monthly') {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+      }
+      return d >= start
+    })
     if (withdrawals.length === 0) return []
     const grouped = {}
     withdrawals.forEach(e => {
@@ -539,8 +550,9 @@ export default function App() {
     const d = parseLocalKey(e.date)
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
   })
-  const totalCredited = monthEntries.filter(e => e.type === 'deposit').reduce((s, e) => s + e.amount, 0)
-  const totalSpent = monthEntries.filter(e => e.type === 'withdrawal').reduce((s, e) => s + e.amount, 0)
+  const totalCredited = monthEntries.filter(e => e.type === 'deposit' && !NEUTRAL_CATEGORIES.includes(e.category)).reduce((s, e) => s + e.amount, 0)
+  const totalSpent = monthEntries.filter(e => e.type === 'withdrawal' && !NEUTRAL_CATEGORIES.includes(e.category)).reduce((s, e) => s + e.amount, 0)
+  const homeNeutralTotal = monthEntries.filter(e => NEUTRAL_CATEGORIES.includes(e.category)).reduce((s, e) => s + e.amount, 0)
   const net = totalCredited - totalSpent
   const balance = entries.reduce((s, e) => s + (e.type === 'deposit' ? e.amount : -e.amount), 0)
 
@@ -753,6 +765,11 @@ export default function App() {
           <div className="stat-value">{fmt(navView === 'stats' ? statsData.net : net)}</div>
         </div>
       </div>
+      {(navView === 'stats' ? statsData.neutralTotal : homeNeutralTotal) > 0 && (
+        <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textAlign: 'center', marginTop: 6 }}>
+          Excludes Lent and Transfers ({fmt(navView === 'stats' ? statsData.neutralTotal : homeNeutralTotal)})
+        </div>
+      )}
 
       {/* ── Stats View ── */}
       {navView === 'stats' && <>
@@ -880,6 +897,11 @@ export default function App() {
             <div className={`stat-value ${statsData.net >= 0 ? 'green' : 'red'}`}>{fmt(statsData.net)}</div>
           </div>
         </div>
+        {statsData.neutralTotal > 0 && (
+          <div style={{ fontSize: '0.7rem', color: 'var(--muted)', textAlign: 'center', marginTop: 6 }}>
+            Excludes Lent and Transfers ({fmt(statsData.neutralTotal)})
+          </div>
+        )}
         {/* Pie chart */}
         <div className="chart-card">
           <div className="chart-header">

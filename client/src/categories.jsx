@@ -60,6 +60,12 @@ export function getCatMeta(cat) {
 
 export const CATEGORIES = Object.keys(CATEGORY_META)
 
+// Money that moves but is not real income or spending: lending/borrowing and
+// transfers between the user's own accounts. Excluded from the Credited /
+// Spent cards and the pie charts, but still included in Total Balance and
+// still listed in History.
+export const NEUTRAL_CATEGORIES = ['Lent', 'Transfers']
+
 // Time-of-day helpers
 const hour = new Date().getHours()
 const dow = new Date().getDay() // 0=Sun,1=Mon,...,6=Sat
