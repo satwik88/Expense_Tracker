@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node src/dateUtils.test.mjs"
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.0",
     "@heroicons/react": "^2.2.0",
     "capacitor-biometric-authentication": "^2.3.3",
@@ -24,6 +26,7 @@
     "@capacitor/cli": "^8.5.0",
     "@vitejs/plugin-react": "^4.3.4",
     "patch-package": "^8.0.1",
+    "sharp": "^0.35.4",
     "vite": "^5.4.8"
   }
 }

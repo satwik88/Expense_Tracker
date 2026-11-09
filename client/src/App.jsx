@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { App as CapApp } from '@capacitor/app'
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Sector
 } from 'recharts'
@@ -8,6 +9,7 @@ import LockScreen from './LockScreen'
 import { MorphIcon } from "morphicons/react"
 import DatePicker from './DatePicker'
 import { User, X } from "lucide"
+import { toLocalKey, parseLocalKey, todayKey } from './dateUtils'
 
 const STORAGE_KEY = 'mt_entries'
 const THEME_KEY = 'mt_theme'
@@ -49,7 +51,7 @@ const PIE_COLORS = [
 ]
 
 const formatDate = (d) => {
-  const date = new Date(d)
+  const date = parseLocalKey(d)
   const day = date.getDate()
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   return `${day} ${months[date.getMonth()]}`
@@ -75,42 +77,9 @@ function SwipeableTxItem({ entry, onDelete }) {
   const meta = getCatMeta(entry.category)
   const isDeposit = entry.type === 'deposit'
   const [swipeOffset, setSwipeOffset] = useState(0)
-  const startX = useRef(null)
-  const isDragging = useRef(false)
-
-  const handleStart = (clientX) => {
-    startX.current = clientX
-    isDragging.current = false
-  }
-
-  const handleMove = (clientX) => {
-    if (startX.current === null) return
-    const diff = clientX - startX.current
-    if (Math.abs(diff) > 5) {
-      isDragging.current = true
-    }
-    if (diff < 0) {
-      setSwipeOffset(Math.max(diff, -80))
-    } else if (swipeOffset < 0) {
-      setSwipeOffset(Math.min(diff - 80, 0))
-    }
-  }
-
-  const handleEnd = () => {
-    if (startX.current !== null && isDragging.current) {
-      if (swipeOffset < -40) {
-        setSwipeOffset(-80)
-      } else {
-        setSwipeOffset(0)
-      }
-    }
-    startX.current = null
-  }
 
   const handleClick = () => {
-    if (!isDragging.current) {
-      setSwipeOffset(prev => prev === 0 ? -80 : 0)
-    }
+    setSwipeOffset(prev => prev === 0 ? -80 : 0)
   }
 
   return (
@@ -120,14 +89,7 @@ function SwipeableTxItem({ entry, onDelete }) {
       </div>
       <div 
         className="tx-item" 
-        style={{ transform: `translateX(${swipeOffset}px)`, transition: startX.current === null ? 'transform 0.2s' : 'none', margin: 0, position: 'relative', zIndex: 1, backgroundColor: 'var(--card)', cursor: 'pointer' }}
-        onTouchStart={(e) => handleStart(e.touches[0].clientX)}
-        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-        onTouchEnd={handleEnd}
-        onMouseDown={(e) => handleStart(e.clientX)}
-        onMouseMove={(e) => startX.current !== null && handleMove(e.clientX)}
-        onMouseUp={handleEnd}
-        onMouseLeave={() => { if(startX.current !== null) handleEnd() }}
+        style={{ transform: `translateX(${swipeOffset}px)`, transition: 'transform 0.2s', margin: 0, position: 'relative', zIndex: 1, backgroundColor: 'var(--card)', cursor: 'pointer' }}
         onClick={handleClick}
       >
         <div className="tx-icon">{meta.emoji}</div>
@@ -154,6 +116,9 @@ export default function App() {
   const [historyFilter, setHistoryFilter] = useState('all')
   const [statsView, setStatsView] = useState('month') // 'day' | 'week' | 'month'
   const [statsDate, setStatsDate] = useState(new Date())
+  const [statsSlideDir, setStatsSlideDir] = useState('right')
+  const [statsTouchStart, setStatsTouchStart] = useState(null)
+  const [statsTouchEnd, setStatsTouchEnd] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
   const [toast, setToast] = useState('')
   const [userName, setUserName] = useState(() => localStorage.getItem('mt_username') || 'User')
@@ -193,13 +158,24 @@ export default function App() {
   const [categoryInput, setCategoryInput] = useState('')
   const [description, setDescription] = useState('')
   const [manualCat, setManualCat] = useState('')
-  const [txDate, setTxDate] = useState(() => new Date().toISOString().split('T')[0])
+  const [txDate, setTxDate] = useState(() => todayKey())
   const [submitting, setSubmitting] = useState(false)
 
   const historyScrollRef = useRef(null)
   const fileInputRef = useRef(null)
 
   // Theme effect — sync attribute and resolve
+  useEffect(() => {
+    const listener = CapApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive && AUTH.isLockEnabled()) {
+        setUnlocked(false)
+      }
+    })
+    return () => {
+      listener.then(l => l.remove())
+    }
+  }, [])
+
   useEffect(() => {
     const stored = localStorage.getItem(THEME_KEY) || 'system'
     setThemeStored(stored)
@@ -286,11 +262,11 @@ export default function App() {
     r.setHours(0,0,0,0)
     return r
   }
-  const fmtDateKey = (d) => d.toISOString().split('T')[0]
+  const fmtDateKey = (d) => toLocalKey(d)
 
   const getStatsForRange = (start, endExclusive) => {
     const inRange = entries.filter(e => {
-      const d = new Date(e.date)
+      const d = parseLocalKey(e.date)
       return d >= start && d < endExclusive
     })
     const credited = inRange.filter(e => e.type === 'deposit').reduce((s, e) => s + e.amount, 0)
@@ -304,7 +280,7 @@ export default function App() {
     const pieData = Object.entries(grouped).map(([category, amount]) => ({
       category, name: category, value: amount,
       pct: total ? ((amount / total) * 100).toFixed(0) : '0'
-    }))
+    })).sort((a, b) => b.value - a.value)
     return { credited, spent, net, pieData, count: inRange.length }
   }
 
@@ -328,6 +304,7 @@ export default function App() {
   const statsData = getStatsForRange(statsRange.start, statsRange.end)
 
   const prevPeriod = () => {
+    setStatsSlideDir('left')
     const d = new Date(statsDate)
     if (statsView === 'day') d.setDate(d.getDate() - 1)
     else if (statsView === 'week') d.setDate(d.getDate() - 7)
@@ -335,6 +312,7 @@ export default function App() {
     setStatsDate(d)
   }
   const nextPeriod = () => {
+    setStatsSlideDir('right')
     const d = new Date(statsDate)
     if (statsView === 'day') d.setDate(d.getDate() + 1)
     else if (statsView === 'week') d.setDate(d.getDate() + 7)
@@ -342,6 +320,30 @@ export default function App() {
     setStatsDate(d)
   }
   const goToToday = () => setStatsDate(new Date())
+
+  const onStatsTouchStart = (e) => {
+    setStatsTouchEnd(null);
+    setStatsTouchStart({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const onStatsTouchMove = (e) => {
+    setStatsTouchEnd({ x: e.targetTouches[0].clientX, y: e.targetTouches[0].clientY });
+  };
+
+  const onStatsTouchEnd = () => {
+    if (!statsTouchStart || !statsTouchEnd) return;
+    const diffX = statsTouchStart.x - statsTouchEnd.x;
+    const diffY = statsTouchStart.y - statsTouchEnd.y;
+    
+    // Only trigger swipe if horizontal distance is greater than vertical (to allow scrolling)
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+      if (diffX > 0) {
+        nextPeriod();
+      } else {
+        prevPeriod();
+      }
+    }
+  };
 
   const statsPeriodLabel = () => {
     const d = statsDate
@@ -366,7 +368,7 @@ export default function App() {
     const daysInMonth = new Date(year, month + 1, 0).getDate()
     const daysInPrevMonth = new Date(year, month, 0).getDate()
     
-    const todayKey = fmtDateKey(new Date())
+    const todayK = fmtDateKey(new Date())
     const selectedKey = fmtDateKey(statsDate)
     const rangeStart = new Date(year, month, 1)
     const rangeEnd = new Date(year, month + 1, 1)
@@ -384,10 +386,10 @@ export default function App() {
       const date = new Date(year, month, day)
       const key = fmtDateKey(date)
       const hasTx = entries.some(tx => {
-        const td = new Date(tx.date)
+        const td = parseLocalKey(tx.date)
         return td >= rangeStart && td < rangeEnd && fmtDateKey(td) === key
       })
-      days.push({ day, key, hasTx, isToday: key === todayKey, isSelected: key === selectedKey, isCurrentMonth: true })
+      days.push({ day, key, hasTx, isToday: key === todayK, isSelected: key === selectedKey, isCurrentMonth: true })
     }
     
     // Next month padding (fill exactly 6 rows = 42 days)
@@ -403,15 +405,15 @@ export default function App() {
   const buildWeekDays = () => {
     const s = getWeekStart(statsDate)
     const e = new Date(s); e.setDate(e.getDate() + 7)
-    const todayKey = fmtDateKey(new Date())
+    const todayK = fmtDateKey(new Date())
     return Array.from({length: 7}, (_, i) => {
       const d = new Date(s); d.setDate(d.getDate() + i)
       const key = fmtDateKey(d)
       const hasTx = entries.some(tx => {
-        const td = new Date(tx.date)
+        const td = parseLocalKey(tx.date)
         return td >= s && td < e && fmtDateKey(td) === key
       })
-      return { day: d.getDate(), weekday: DAYS[d.getDay()], key, hasTx, isToday: key === todayKey, date: d }
+      return { day: d.getDate(), weekday: DAYS[d.getDay()], key, hasTx, isToday: key === todayK, date: d }
     })
   }
 
@@ -419,7 +421,7 @@ export default function App() {
   const dayTransactions = (() => {
     if (statsView !== 'day') return []
     const key = fmtDateKey(statsDate)
-    return entries.filter(e => e.date.startsWith(key)).sort((a,b) => new Date(b.date) - new Date(a.date))
+    return entries.filter(e => e.date.startsWith(key)).sort((a,b) => parseLocalKey(b.date) - parseLocalKey(a.date))
   })()
 
   // ── Pie chart data — withdrawal entries grouped by category for the selected range
@@ -427,7 +429,7 @@ export default function App() {
     const now = new Date()
     const days = chartRange === 'weekly' ? 7 : chartRange === 'yearly' ? 365 : 30
     const cutoff = new Date(now - days * 86400000)
-    const withdrawals = entries.filter(e => e.type === 'withdrawal' && new Date(e.date) >= cutoff)
+    const withdrawals = entries.filter(e => e.type === 'withdrawal' && parseLocalKey(e.date) >= cutoff)
     if (withdrawals.length === 0) return []
     const grouped = {}
     withdrawals.forEach(e => {
@@ -439,7 +441,7 @@ export default function App() {
       name: category,
       value: amount,
       pct: ((amount / total) * 100).toFixed(0)
-    }))
+    })).sort((a, b) => b.value - a.value)
   }, [entries, chartRange])
 
   const chartData = getPieChartData()
@@ -449,7 +451,7 @@ export default function App() {
   const thisMonth = now.getMonth()
   const thisYear = now.getFullYear()
   const monthEntries = entries.filter(e => {
-    const d = new Date(e.date)
+    const d = parseLocalKey(e.date)
     return d.getMonth() === thisMonth && d.getFullYear() === thisYear
   })
   const totalCredited = monthEntries.filter(e => e.type === 'deposit').reduce((s, e) => s + e.amount, 0)
@@ -460,7 +462,7 @@ export default function App() {
   // History view filters (category) + sorts newest first
   const historyFiltered = historyFilter === 'all' ? [...entries] : [...entries].filter(e => e.category === historyFilter)
   const historySorted = historyFiltered.sort((a, b) => {
-    const dDiff = new Date(b.date) - new Date(a.date)
+    const dDiff = parseLocalKey(b.date) - parseLocalKey(a.date)
     return dDiff !== 0 ? dDiff : Number(b.id) - Number(a.id)
   })
 
@@ -485,7 +487,7 @@ export default function App() {
       saveEntries(updated)
       setEntries(updated)
       setAmount(''); setCategoryInput(''); setDescription(''); setManualCat('')
-      setTxDate(new Date().toISOString().split('T')[0])
+      setTxDate(todayKey())
       setModalOpen(false)
       showToast('✓ Entry added')
     } catch (err) {
@@ -660,7 +662,13 @@ export default function App() {
           {statsView === 'month' && (() => {
             const { days } = buildCalendarDays()
             return (
-              <div className="cal-grid">
+              <div 
+                className={`cal-grid calendar-body slide-in-${statsSlideDir}`} 
+                key={statsDate.getFullYear() + '-' + statsDate.getMonth()}
+                onTouchStart={onStatsTouchStart}
+                onTouchMove={onStatsTouchMove}
+                onTouchEnd={onStatsTouchEnd}
+              >
                 <div className="cal-header">
                   {DAYS.map(d => <span key={d} className="cal-dow">{d}</span>)}
                 </div>
@@ -668,7 +676,7 @@ export default function App() {
                   <button key={i} className={`cal-day ${cell.isCurrentMonth ? '' : 'other-month'} ${cell.isToday ? 'today' : ''} ${cell.isSelected && cell.isCurrentMonth ? 'selected' : ''}`}
                     onClick={() => { 
                       if (cell.isCurrentMonth) {
-                        setStatsDate(new Date(cell.key + 'T00:00:00')); 
+                        setStatsDate(parseLocalKey(cell.key)); 
                         setStatsView('day');
                       }
                     }}>
@@ -682,7 +690,13 @@ export default function App() {
           {statsView === 'week' && (() => {
             const wd = buildWeekDays()
             return (
-              <div className="week-grid">
+              <div 
+                className={`week-grid calendar-body slide-in-${statsSlideDir}`}
+                key={wd[0].date.toISOString()}
+                onTouchStart={onStatsTouchStart}
+                onTouchMove={onStatsTouchMove}
+                onTouchEnd={onStatsTouchEnd}
+              >
                 {wd.map((d, i) => (
                   <button key={i} className={`week-day ${d.isToday ? 'today' : ''} ${d.hasTx ? 'has-tx' : ''}`}
                     onClick={() => { setStatsDate(d.date); setStatsView('day') }}>
