@@ -108,6 +108,10 @@ npm run dev
 ```
 This starts Vite on `http://localhost:5173`. Open it in a browser to preview the UI. Native-only features (biometric auth, etc.) are only available inside the Android build.
 
+### Optional local HTTPS
+
+The dev server serves over HTTPS only when a local certificate is present. Put `key.pem` and `cert.pem` in `client/ssl/` (that folder is gitignored). If either file is missing, Vite falls back to HTTP so `npm run dev` still works on a fresh clone.
+
 ---
 
 ## Building the Android APK

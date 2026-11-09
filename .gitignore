@@ -4,6 +4,11 @@ client/node_modules/
 
 # Build output
 client/dist/
+client/android/app/build/
+client/android/build/
+client/android/.gradle/
+client/android/app/src/main/assets/public/
+*.apk
 
 # Environment & secrets
 .env
