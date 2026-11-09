@@ -141,6 +141,7 @@ export default function App() {
   const [changePinNewConfirm, setChangePinNewConfirm] = useState('')
   const [changePinError, setChangePinError] = useState('')
   const [changePinLoading, setChangePinLoading] = useState(false)
+  const [changePinLockMs, setChangePinLockMs] = useState(() => AUTH.getPinLockRemainingMs())
   const [bioChangeMode, setBioChangeMode] = useState(null) // null | 'enable' | 'confirm-enable'
   const [pendingDeleteId, setPendingDeleteId] = useState(null) // id of entry in "tap again to confirm" state
   const [bioChangeLoading, setBioChangeLoading] = useState(false)
@@ -251,6 +252,26 @@ export default function App() {
       }
     }
   }, [unlocked])
+
+  // Count down an active PIN lockout while the "Verify old PIN" step is open.
+  const changePinLocked = changePinLockMs > 0
+  useEffect(() => {
+    if (!changePinLocked) return
+    const id = setInterval(() => {
+      const ms = AUTH.getPinLockRemainingMs()
+      setChangePinLockMs(ms)
+      if (ms <= 0) {
+        setChangePinOld('')
+        setChangePinError('')
+      }
+    }, 1000)
+    return () => clearInterval(id)
+  }, [changePinLocked])
+
+  // While locked out the field shows the countdown instead of the error.
+  const changePinErrorText = changePinLocked
+    ? `Try again in ${Math.ceil(changePinLockMs / 1000)}s`
+    : changePinError
 
   // ── Stats / Calendar helpers ──
   const DAYS = ['Mo','Tu','We','Th','Fr','Sa','Su']
@@ -1166,18 +1187,20 @@ export default function App() {
                         <div className="pin-dots" style={{ justifyContent: 'center', gap: 10, marginBottom: 8 }}>
                           {[0,1,2,3].map(i => <div key={i} className={`pin-dot ${i < changePinOld.length ? 'filled' : ''}`} />)}
                         </div>
-                        {changePinError && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinError}</div>}
+                        {changePinErrorText && <div className="pin-error" style={{ textAlign: 'center', marginBottom: 6, fontSize: '0.75rem' }}>{changePinErrorText}</div>}
                         <div className="pin-keypad pin-pad-light" style={{ maxWidth: 200, margin: '0 auto 8px', gap: 10 }}>
-                          {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" onClick={() => setChangePinOld(p => p.length < 4 ? p + n : p)}>{n}</button>)}
-                          <button className="pin-key clear" onClick={() => setChangePinOld(p => p.slice(0, -1))}>
+                          {[1,2,3,4,5,6,7,8,9].map(n => <button key={n} className="pin-key" disabled={changePinLocked} onClick={() => { if (AUTH.getPinLockRemainingMs() > 0) return; setChangePinOld(p => p.length < 4 ? p + n : p) }}>{n}</button>)}
+                          <button className="pin-key clear" disabled={changePinLocked} onClick={() => { if (AUTH.getPinLockRemainingMs() > 0) return; setChangePinOld(p => p.slice(0, -1)) }}>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
                           </button>
-                          <button className="pin-key" onClick={() => setChangePinOld(p => p.length < 4 ? p + '0' : p)}>0</button>
-                          <button className="pin-key confirm" onClick={async () => {
+                          <button className="pin-key" disabled={changePinLocked} onClick={() => { if (AUTH.getPinLockRemainingMs() > 0) return; setChangePinOld(p => p.length < 4 ? p + '0' : p) }}>0</button>
+                          <button className="pin-key confirm" disabled={changePinLocked} onClick={async () => {
                             if (changePinOld.length !== 4) return
+                            const lockedMs = AUTH.getPinLockRemainingMs()
+                            if (lockedMs > 0) { setChangePinLockMs(lockedMs); setChangePinOld(''); return }
                             const ok = await AUTH.verifyPin(changePinOld)
-                            if (ok) { setChangePinMode('setup'); setChangePinOld(''); setChangePinError(''); }
-                            else { setChangePinError('Incorrect PIN'); setChangePinOld(''); }
+                            if (ok) { setChangePinMode('setup'); setChangePinOld(''); setChangePinError(''); setChangePinLockMs(0) }
+                            else { setChangePinLockMs(AUTH.getPinLockRemainingMs()); setChangePinError('Incorrect PIN'); setChangePinOld(''); }
                           }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                           </button>
@@ -1249,7 +1272,7 @@ export default function App() {
                   return (
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button className="modal-submit" style={{ flex: 1, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 12px' }}
-                        onClick={() => { setChangePinMode('check'); setChangePinOld(''); setChangePinNew(''); setChangePinNewConfirm(''); setChangePinError(''); }}>
+                        onClick={() => { setChangePinMode('check'); setChangePinOld(''); setChangePinNew(''); setChangePinNewConfirm(''); setChangePinError(''); setChangePinLockMs(AUTH.getPinLockRemainingMs()); }}>
                         Change PIN
                       </button>
                       <button className="modal-reset-btn" style={{ fontSize: '0.85rem', padding: '10px 12px' }}

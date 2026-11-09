@@ -36,10 +36,26 @@ export default function LockScreen({ onUnlock }) {
   const [bioError, setBioError] = useState('')
   const [bioFailCount, setBioFailCount] = useState(0)
   const [showRecovery, setShowRecovery] = useState(false)
+  const [pinLockMs, setPinLockMs] = useState(() => AUTH.getPinLockRemainingMs())
 
   useEffect(() => {
     AUTH.isBiometricSupported().then(setBiometricSupported)
   }, [])
+
+  // Count down an active PIN lockout; clear the error once it expires.
+  const pinLocked = pinLockMs > 0
+  useEffect(() => {
+    if (!pinLocked) return
+    const id = setInterval(() => {
+      const ms = AUTH.getPinLockRemainingMs()
+      setPinLockMs(ms)
+      if (ms <= 0) {
+        setPin('')
+        setPinError('')
+      }
+    }, 1000)
+    return () => clearInterval(id)
+  }, [pinLocked])
 
   // Biometric-only: auto-verify on mount once we know support is available
   useEffect(() => {
@@ -59,21 +75,12 @@ export default function LockScreen({ onUnlock }) {
           AUTH.unlock()
           onUnlock()
         } else {
-          // NO_CREDENTIALS / NOT_ENROLLED means the stored flag is stale —
-          // auto-retrigger setup so the user can re-enroll without ever
-          // seeing the fail counter. This handles the case where the native
-          // key was cleared (e.g. OS factory reset, biometric cleared in
-          // device settings) but localStorage still says "enabled".
-          if (bioError.startsWith('[no-credential]')) {
-            await AUTH.setupBiometric()
-            AUTH.unlock()
-            onUnlock()
-          } else {
-            const newFailCount = bioFailCount + 1
-            setBioFailCount(newFailCount)
-            setBioError(newFailCount >= 3 ? 'Too many failed attempts' : 'Biometric failed')
-            if (newFailCount >= 3) setShowRecovery(true)
-          }
+          // NO_CREDENTIALS / NOT_ENROLLED are thrown by verifyBiometric and
+          // handled by the catch block below, which re-runs setup.
+          const newFailCount = bioFailCount + 1
+          setBioFailCount(newFailCount)
+          setBioError(newFailCount >= 3 ? 'Too many failed attempts' : 'Biometric failed')
+          if (newFailCount >= 3) setShowRecovery(true)
         }
       } else if (action === 'setup') {
         await AUTH.setupBiometric()
@@ -99,22 +106,33 @@ export default function LockScreen({ onUnlock }) {
       setBioLoading(false)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onUnlock, bioFailCount, bioError])
+  }, [onUnlock, bioFailCount])
 
   const handlePinInput = useCallback((digit) => {
+    if (AUTH.getPinLockRemainingMs() > 0) return
     setPin(p => p.length < 4 ? p + digit : p)
   }, [])
 
-  const handlePinClear = useCallback(() => setPin(p => p.slice(0, -1)), [])
+  const handlePinClear = useCallback(() => {
+    if (AUTH.getPinLockRemainingMs() > 0) return
+    setPin(p => p.slice(0, -1))
+  }, [])
 
   const handlePinConfirm = useCallback(async () => {
     if (pin.length !== 4) return
+    const lockedMs = AUTH.getPinLockRemainingMs()
+    if (lockedMs > 0) {
+      setPinLockMs(lockedMs)
+      setPin('')
+      return
+    }
     if (pinMode === 'check') {
       const ok = await AUTH.verifyPin(pin)
       if (ok) {
         AUTH.unlock()
         onUnlock()
       } else {
+        setPinLockMs(AUTH.getPinLockRemainingMs())
         setPinError('Incorrect PIN')
         setPin('')
       }
@@ -138,6 +156,11 @@ export default function LockScreen({ onUnlock }) {
 
   const dots = Array(4).fill(0)
   const displayPin = pinMode === 'confirm-pin' ? pinConfirm : pin
+
+  // While locked out the PIN field shows the countdown instead of the error.
+  const pinErrorText = pinLocked
+    ? `Try again in ${Math.ceil(pinLockMs / 1000)}s`
+    : pinError
 
   const isPinOnly = hasPin && !hasBiometric
   const isBiometricOnly = hasBiometric && !hasPin
@@ -178,19 +201,19 @@ export default function LockScreen({ onUnlock }) {
         )}
 
         {/* PIN error — hidden in biometric-only mode */}
-        {hasPin && <div className="pin-error">{pinError}</div>}
+        {hasPin && <div className="pin-error">{pinErrorText}</div>}
 
         {/* PIN keypad — shown when PIN is set (pin-only or both) */}
         {(isPinOnly || isBoth) && (
           <div className="pin-keypad">
             {[1,2,3,4,5,6,7,8,9].map(n => (
-              <button key={n} className="pin-key" onClick={() => handlePinInput(n)}>{n}</button>
+              <button key={n} className="pin-key" onClick={() => handlePinInput(n)} disabled={pinLocked}>{n}</button>
             ))}
-            <button className="pin-key clear" onClick={handlePinClear} aria-label="Delete">
+            <button className="pin-key clear" onClick={handlePinClear} disabled={pinLocked} aria-label="Delete">
               <DeleteIcon />
             </button>
-            <button className="pin-key" onClick={() => handlePinInput(0)}>0</button>
-            <button className="pin-key confirm" onClick={handlePinConfirm}>OK</button>
+            <button className="pin-key" onClick={() => handlePinInput(0)} disabled={pinLocked}>0</button>
+            <button className="pin-key confirm" onClick={handlePinConfirm} disabled={pinLocked}>OK</button>
           </div>
         )}
 
