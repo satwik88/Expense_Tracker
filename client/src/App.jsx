@@ -665,7 +665,20 @@ export default function App() {
     setResetting(true)
     try {
       localStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem('mt_username')
+      localStorage.removeItem(THEME_KEY)
+      // Clears biometric + PIN, the attempt counters, and disables the lock.
+      AUTH.clearLock()
+      AUTH.unlock()
+
       setEntries([])
+      setUserName('User')
+      setThemeStored('system')
+      document.documentElement.setAttribute('data-theme', resolveTheme('system'))
+      setThemeResolved(resolveTheme('system'))
+      setGreeting(getRandomGreeting('User'))
+      // The app is empty now — keep the user inside it instead of showing a lock screen.
+      setUnlocked(true)
       setProfileOpen(false)
       setConfirmResetOpen(false)
       showToast('All data reset')
@@ -1630,7 +1643,7 @@ export default function App() {
           <div className="modal-handle" />
           <div className="modal-title" style={{ color: 'var(--red)' }}>Reset All Data?</div>
           <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.6, margin: '0 0 20px' }}>
-            This will delete all your transactions and reset the app. This can't be undone.
+            This will delete all your transactions, name, theme and app lock settings. This can't be undone.
           </p>
           <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
             <button
