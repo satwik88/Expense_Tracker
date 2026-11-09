@@ -429,9 +429,18 @@ export default function App() {
   // ── Pie chart data — withdrawal entries grouped by category for the selected range
   const getPieChartData = useCallback(() => {
     const now = new Date()
-    const days = chartRange === 'weekly' ? 7 : chartRange === 'yearly' ? 365 : 30
-    const cutoff = new Date(now - days * 86400000)
-    const withdrawals = entries.filter(e => e.type === 'withdrawal' && parseLocalKey(e.date) >= cutoff)
+    // Weekly = last 7 days including today; Monthly = current calendar month;
+    // Yearly = current calendar year. All boundaries are local midnight.
+    let start
+    if (chartRange === 'weekly') {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      start.setDate(start.getDate() - 6)
+    } else if (chartRange === 'yearly') {
+      start = new Date(now.getFullYear(), 0, 1)
+    } else {
+      start = new Date(now.getFullYear(), now.getMonth(), 1)
+    }
+    const withdrawals = entries.filter(e => e.type === 'withdrawal' && parseLocalKey(e.date) >= start)
     if (withdrawals.length === 0) return []
     const grouped = {}
     withdrawals.forEach(e => {
