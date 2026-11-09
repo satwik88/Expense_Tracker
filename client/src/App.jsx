@@ -14,9 +14,61 @@ import { toLocalKey, parseLocalKey, todayKey } from './dateUtils'
 const STORAGE_KEY = 'mt_entries'
 const THEME_KEY = 'mt_theme'
 
+const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/
+
+// A 'YYYY-MM-DD' key is valid only if it is a real calendar day (rejects
+// e.g. 2026-02-30, which `new Date` would silently roll over).
+function isValidDateKey(key) {
+  if (typeof key !== 'string' || !DATE_KEY_RE.test(key)) return false
+  const d = parseLocalKey(key)
+  return !Number.isNaN(d.getTime()) && toLocalKey(d) === key
+}
+
+// Validate an imported JSON array. Invalid items are dropped and duplicate
+// ids are ignored. Unknown categories fall back to 'Other'.
+function validateEntries(data) {
+  const valid = []
+  const seen = new Set()
+  let skipped = 0
+  if (!Array.isArray(data)) return { valid, skipped }
+
+  for (const item of data) {
+    if (!item || typeof item !== 'object') { skipped++; continue }
+    const id = typeof item.id === 'string' ? item.id : ''
+    const amount = item.amount
+    const type = item.type
+    const date = item.date
+    if (
+      !id ||
+      typeof amount !== 'number' || !Number.isFinite(amount) || amount < 0 ||
+      (type !== 'deposit' && type !== 'withdrawal') ||
+      !isValidDateKey(date) ||
+      seen.has(id)
+    ) {
+      skipped++
+      continue
+    }
+    const category = typeof item.category === 'string' && CATEGORIES.includes(item.category)
+      ? item.category
+      : 'Other'
+    const note = typeof item.note === 'string' ? item.note : ''
+    seen.add(id)
+    valid.push({ ...item, id, amount, type, category, note, date })
+  }
+  return { valid, skipped }
+}
+
 function loadEntries() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') }
-  catch { return [] }
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+    if (!Array.isArray(data)) return []
+    // Defensive: drop records that cannot be rendered safely.
+    return data.filter((e) =>
+      e && typeof e === 'object' &&
+      isValidDateKey(e.date) &&
+      Number.isFinite(Number(e.amount))
+    )
+  } catch { return [] }
 }
 function saveEntries(entries) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries))
@@ -127,6 +179,7 @@ export default function App() {
   const [editName, setEditName] = useState('')
   const [confirmResetOpen, setConfirmResetOpen] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [pendingImport, setPendingImport] = useState(null) // { valid, skipped } awaiting confirmation
   const [unlocked, setUnlocked] = useState(false)
   const [lockModalOpen, setLockModalOpen] = useState(false)
   const [biometricSupported, setBiometricSupported] = useState(false)
@@ -576,13 +629,16 @@ export default function App() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target.result);
-        if (Array.isArray(data)) {
-           saveEntries(data);
-           setEntries(data);
-           showToast('Data imported successfully');
-           setProfileOpen(false);
-        } else {
+        if (!Array.isArray(data)) {
            showToast('Invalid backup file');
+        } else {
+          const { valid, skipped } = validateEntries(data);
+          if (valid.length === 0) {
+            showToast(skipped > 0 ? 'No valid transactions found' : 'Backup contains no transactions');
+          } else {
+            // Never overwrite anything until the user confirms.
+            setPendingImport({ valid, skipped });
+          }
         }
       } catch (err) {
          showToast('Failed to parse backup');
@@ -590,6 +646,19 @@ export default function App() {
       e.target.value = null;
     };
     reader.readAsText(file);
+  }
+
+  function applyImport(mode) {
+    if (!pendingImport) return;
+    const { valid } = pendingImport;
+    const next = mode === 'merge'
+      ? [...entries, ...valid.filter((v) => !entries.some((e) => e.id === v.id))]
+      : valid;
+    saveEntries(next);
+    setEntries(next);
+    setPendingImport(null);
+    setProfileOpen(false);
+    showToast(mode === 'merge' ? 'Backup merged' : 'Data imported successfully');
   }
 
   function handleResetAllData() {
@@ -1513,6 +1582,45 @@ export default function App() {
               <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
             </svg>
           </button>
+        </div>
+      </div>
+
+      {/* ── Import Confirmation Modal ── */}
+      <div className={`modal-overlay ${pendingImport ? 'open' : ''}`} onClick={(e) => { if (e.target === e.currentTarget) setPendingImport(null) }}>
+        <div className="modal-sheet">
+          <div className="modal-handle" />
+          <div className="modal-title">Import Transactions?</div>
+          <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.6, margin: '0 0 8px' }}>
+            Import {pendingImport ? pendingImport.valid.length : 0} transactions? This replaces your current {entries.length} transactions.
+          </p>
+          {pendingImport && pendingImport.skipped > 0 && (
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', lineHeight: 1.6, margin: 0 }}>
+              {pendingImport.skipped} invalid {pendingImport.skipped === 1 ? 'entry was' : 'entries were'} skipped.
+            </p>
+          )}
+          <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+            <button
+              className="modal-reset-btn"
+              style={{ flex: 1, width: 'auto', borderColor: 'var(--text)', color: 'var(--text)', margin: 0, fontSize: '0.85rem', padding: '10px 8px' }}
+              onClick={() => setPendingImport(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className="modal-submit"
+              style={{ flex: 1, margin: 0, background: 'var(--accent-bg)', color: 'var(--text)', border: '1px solid var(--border)', fontSize: '0.85rem', padding: '10px 8px' }}
+              onClick={() => applyImport('merge')}
+            >
+              Merge
+            </button>
+            <button
+              className="modal-reset-btn"
+              style={{ flex: 1, width: 'auto', margin: 0, fontSize: '0.85rem', padding: '10px 8px' }}
+              onClick={() => applyImport('replace')}
+            >
+              Replace
+            </button>
+          </div>
         </div>
       </div>
 
