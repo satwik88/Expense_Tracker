@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { parseLocalKey, toLocalKey } from './dateUtils';
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
-const DAY_NAMES = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const DAY_NAMES = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 export default function DatePicker({ value, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +22,7 @@ export default function DatePicker({ value, onChange }) {
   }, []);
 
   // value is expected to be "YYYY-MM-DD" in local time
-  const initialDate = value ? new Date(value + 'T00:00:00') : new Date();
+  const initialDate = value ? parseLocalKey(value) : new Date();
   
   // Track the month currently being viewed in the calendar
   const [currentMonth, setCurrentMonth] = useState(new Date(initialDate.getFullYear(), initialDate.getMonth(), 1));
@@ -67,17 +68,12 @@ export default function DatePicker({ value, onChange }) {
   };
 
   const handleDateClick = (day) => {
-    // Generate YYYY-MM-DD
-    const newDate = new Date(year, month, day);
-    const y = newDate.getFullYear();
-    const m = String(newDate.getMonth() + 1).padStart(2, '0');
-    const d = String(newDate.getDate()).padStart(2, '0');
-    onChange(`${y}-${m}-${d}`);
+    onChange(toLocalKey(new Date(year, month, day)));
     setIsOpen(false);
   };
 
-  // Generate calendar grid
-  const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 (Sun) - 6 (Sat)
+  // Generate calendar grid (Monday-first, matching the stats calendar)
+  const firstDayOfMonth = (new Date(year, month, 1).getDay() + 6) % 7; // 0 (Mon) - 6 (Sun)
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const days = [];
@@ -88,9 +84,8 @@ export default function DatePicker({ value, onChange }) {
     days.push(i);
   }
 
-  // Determine selected day to highlight
-  // Parsing value reliably by appending T00:00:00 to avoid timezone shift
-  const selectedDate = value ? new Date(value + 'T00:00:00') : null;
+  // Determine selected day to highlight (parsed as a local calendar day)
+  const selectedDate = value ? parseLocalKey(value) : null;
   const selectedYear = selectedDate?.getFullYear();
   const selectedMonth = selectedDate?.getMonth();
   const selectedDay = selectedDate?.getDate();

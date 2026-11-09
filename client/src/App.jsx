@@ -258,7 +258,9 @@ export default function App() {
 
   const getWeekStart = (d) => {
     const r = new Date(d)
-    r.setDate(r.getDate() - r.getDay())
+    // Monday-first: getDay() is 0 for Sunday, so shift it to 6.
+    const diff = (r.getDay() + 6) % 7
+    r.setDate(r.getDate() - diff)
     r.setHours(0,0,0,0)
     return r
   }
@@ -413,7 +415,7 @@ export default function App() {
         const td = parseLocalKey(tx.date)
         return td >= s && td < e && fmtDateKey(td) === key
       })
-      return { day: d.getDate(), weekday: DAYS[d.getDay()], key, hasTx, isToday: key === todayK, date: d }
+      return { day: d.getDate(), weekday: DAYS[(d.getDay() + 6) % 7], key, hasTx, isToday: key === todayK, date: d }
     })
   }
 
