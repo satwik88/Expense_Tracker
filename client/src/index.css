@@ -570,6 +570,44 @@ body {
   z-index: 1;
 }
 
+.balance-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.balance-privacy-btn {
+  background: transparent;
+  border: none;
+  padding: 6px;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.balance-privacy-btn:hover {
+  opacity: 1;
+}
+
+.balance-privacy-btn:active {
+  transform: scale(0.92);
+  opacity: 1;
+}
+
+.balance-privacy-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
 /* --- Quick Stats Row --- */
 .stats-row {
   display: grid;

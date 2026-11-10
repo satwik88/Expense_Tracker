@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0 --port 5173",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node src/dateUtils.test.mjs && node src/exportUtils.test.mjs"
+    "test": "node src/dateUtils.test.mjs && node src/exportUtils.test.mjs && node src/privacyAuth.test.mjs"
   },
   "dependencies": {
     "@capacitor/app": "^8.1.1",

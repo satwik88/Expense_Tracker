@@ -8,7 +8,7 @@ import { AUTH } from './auth'
 import LockScreen from './LockScreen'
 import { MorphIcon } from "morphicons/react"
 import DatePicker from './DatePicker'
-import { User, X } from "lucide"
+import { User, X, Eye, EyeOff } from "lucide"
 import { toLocalKey, parseLocalKey, todayKey } from './dateUtils'
 import { createBackupPayload, getBackupFilename, parseBackupData } from './exportUtils'
 
@@ -219,11 +219,17 @@ export default function App() {
   const historyScrollRef = useRef(null)
   const fileInputRef = useRef(null)
 
-  // Theme effect — sync attribute and resolve
+  // App state listener — re-lock app if configured, and always hide balance on background
   useEffect(() => {
     const listener = CapApp.addListener('appStateChange', ({ isActive }) => {
-      if (!isActive && AUTH.isLockEnabled()) {
-        setUnlocked(false)
+      if (!isActive) {
+        setBalanceHidden(true)
+        setPrivacyPinModalOpen(false)
+        setPrivacyPin('')
+        setPrivacyPinError('')
+        if (AUTH.isLockEnabled()) {
+          setUnlocked(false)
+        }
       }
     })
     return () => {
@@ -729,6 +735,118 @@ export default function App() {
     }
   }
 
+  // Privacy state for balance display (in-memory only; resets on background / lock)
+  const [balanceHidden, setBalanceHidden] = useState(false)
+  const [privacyAuthLoading, setPrivacyAuthLoading] = useState(false)
+  const [privacyPinModalOpen, setPrivacyPinModalOpen] = useState(false)
+  const [privacyPin, setPrivacyPin] = useState('')
+  const [privacyPinError, setPrivacyPinError] = useState('')
+  const [privacyPinLockMs, setPrivacyPinLockMs] = useState(() => AUTH.getPinLockRemainingMs())
+
+  // Count down an active PIN lockout while the privacy PIN modal is open.
+  const privacyPinLocked = privacyPinLockMs > 0
+  useEffect(() => {
+    if (!privacyPinLocked) return
+    const id = setInterval(() => {
+      const ms = AUTH.getPinLockRemainingMs()
+      setPrivacyPinLockMs(ms)
+      if (ms <= 0) {
+        setPrivacyPin('')
+        setPrivacyPinError('')
+      }
+    }, 1000)
+    return () => clearInterval(id)
+  }, [privacyPinLocked])
+
+  const privacyPinErrorText = privacyPinLocked
+    ? `Try again in ${Math.ceil(privacyPinLockMs / 1000)}s`
+    : privacyPinError
+
+  async function handleToggleBalancePrivacy() {
+    // If currently visible, hide immediately without auth
+    if (!balanceHidden) {
+      setBalanceHidden(true)
+      return
+    }
+
+    // Prevent concurrent auth requests
+    if (privacyAuthLoading) return
+
+    const hasPin = AUTH.isPinEnabled()
+    const hasBiometric = AUTH.isBiometricEnabled()
+
+    // Case D: Neither biometric nor PIN configured -> reveal immediately
+    if (!hasPin && !hasBiometric) {
+      setBalanceHidden(false)
+      return
+    }
+
+    // Case A & C: Biometric enabled (or both enabled - biometric preferred)
+    if (hasBiometric) {
+      setPrivacyAuthLoading(true)
+      try {
+        const ok = await AUTH.verifyBiometric()
+        if (ok) {
+          setBalanceHidden(false)
+        } else {
+          // If user cancelled or failed, check if PIN fallback is available
+          if (hasPin) {
+            setPrivacyPin('')
+            setPrivacyPinError('')
+            setPrivacyPinLockMs(AUTH.getPinLockRemainingMs())
+            setPrivacyPinModalOpen(true)
+          } else {
+            showToast('Biometric authentication cancelled')
+          }
+        }
+      } catch (err) {
+        console.error('Biometric auth error:', err)
+        if (hasPin) {
+          // Fall back to PIN
+          setPrivacyPin('')
+          setPrivacyPinError('')
+          setPrivacyPinLockMs(AUTH.getPinLockRemainingMs())
+          setPrivacyPinModalOpen(true)
+        } else {
+          showToast(err?.message || 'Authentication failed')
+        }
+      } finally {
+        setPrivacyAuthLoading(false)
+      }
+      return
+    }
+
+    // Case B: PIN only
+    if (hasPin) {
+      setPrivacyPin('')
+      setPrivacyPinError('')
+      setPrivacyPinLockMs(AUTH.getPinLockRemainingMs())
+      setPrivacyPinModalOpen(true)
+    }
+  }
+
+  async function handlePrivacyPinConfirm() {
+    if (privacyPin.length !== 4) return
+    const lockedMs = AUTH.getPinLockRemainingMs()
+    if (lockedMs > 0) {
+      setPrivacyPinLockMs(lockedMs)
+      setPrivacyPin('')
+      return
+    }
+    const ok = await AUTH.verifyPin(privacyPin)
+    if (ok) {
+      setBalanceHidden(false)
+      setPrivacyPinModalOpen(false)
+      setPrivacyPin('')
+      setPrivacyPinError('')
+    } else {
+      const remaining = AUTH.getPinLockRemainingMs()
+      setPrivacyPinLockMs(remaining)
+      setPrivacyPinError('Incorrect PIN')
+      setPrivacyPin('')
+    }
+  }
+
   // Lock guard — show lock screen on top if user has enabled app lock (allows acrylic blur)
   const isLocked = !unlocked && AUTH.isLockEnabled();
 
@@ -774,7 +892,21 @@ export default function App() {
       {/* ── Balance Card ── */}
       <div className="balance-card">
         <div className="balance-label">Total Balance</div>
-        <div className="balance-amount">{fmt(balance)}</div>
+        <div className="balance-amount-row">
+          <div className="balance-amount">
+            {balanceHidden ? '₹ ••••••' : fmt(balance)}
+          </div>
+          <button
+            type="button"
+            className="balance-privacy-btn"
+            onClick={handleToggleBalancePrivacy}
+            disabled={privacyAuthLoading}
+            aria-label={balanceHidden ? 'Show balance' : 'Hide balance'}
+            title={balanceHidden ? 'Reveal balance' : 'Hide balance'}
+          >
+            <MorphIcon icon={balanceHidden ? EyeOff : Eye} />
+          </button>
+        </div>
       </div>
 
       {/* ── Quick Stats Row ── */}
@@ -1681,6 +1813,85 @@ export default function App() {
               onClick={() => applyImport('replace')}
             >
               Replace
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Balance Privacy PIN Modal ── */}
+      <div className={`modal-overlay ${privacyPinModalOpen ? 'open' : ''}`} onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setPrivacyPinModalOpen(false)
+          setPrivacyPin('')
+          setPrivacyPinError('')
+        }
+      }}>
+        <div className="modal-sheet">
+          <div className="modal-handle" />
+          <div className="modal-title">Enter PIN to Reveal Balance</div>
+          <div style={{ marginBottom: 20 }}>
+            <div className="pin-dots" style={{ justifyContent: 'center', gap: 14, marginBottom: 12 }}>
+              {[0,1,2,3].map(i => (
+                <div key={i} className={`pin-dot ${i < privacyPin.length ? 'filled' : ''}`} />
+              ))}
+            </div>
+            {privacyPinErrorText && (
+              <div className="pin-error" style={{ textAlign: 'center', marginBottom: 12 }}>
+                {privacyPinErrorText}
+              </div>
+            )}
+            <div className="pin-keypad pin-pad-light" style={{ maxWidth: 220, margin: '0 auto 12px' }}>
+              {[1,2,3,4,5,6,7,8,9].map(n => (
+                <button
+                  key={n}
+                  className="pin-key"
+                  disabled={privacyPinLocked}
+                  onClick={() => {
+                    if (AUTH.getPinLockRemainingMs() > 0) return
+                    setPrivacyPin(p => p.length < 4 ? p + n : p)
+                  }}
+                >
+                  {n}
+                </button>
+              ))}
+              <button
+                className="pin-key clear"
+                disabled={privacyPinLocked}
+                onClick={() => {
+                  if (AUTH.getPinLockRemainingMs() > 0) return
+                  setPrivacyPin(p => p.slice(0, -1))
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+              </button>
+              <button
+                className="pin-key"
+                disabled={privacyPinLocked}
+                onClick={() => {
+                  if (AUTH.getPinLockRemainingMs() > 0) return
+                  setPrivacyPin(p => p.length < 4 ? p + '0' : p)
+                }}
+              >
+                0
+              </button>
+              <button
+                className="pin-key confirm"
+                disabled={privacyPinLocked}
+                onClick={handlePrivacyPinConfirm}
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </button>
+            </div>
+            <button
+              className="pin-toggle"
+              style={{ display: 'block', margin: '0 auto', fontSize: '0.8rem' }}
+              onClick={() => {
+                setPrivacyPinModalOpen(false)
+                setPrivacyPin('')
+                setPrivacyPinError('')
+              }}
+            >
+              Cancel
             </button>
           </div>
         </div>
