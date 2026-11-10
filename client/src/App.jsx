@@ -10,6 +10,7 @@ import { MorphIcon } from "morphicons/react"
 import DatePicker from './DatePicker'
 import { User, X } from "lucide"
 import { toLocalKey, parseLocalKey, todayKey } from './dateUtils'
+import { createBackupPayload, getBackupFilename, parseBackupData } from './exportUtils'
 
 const STORAGE_KEY = 'mt_entries'
 const THEME_KEY = 'mt_theme'
@@ -602,35 +603,56 @@ export default function App() {
   }
 
   async function exportData() {
-    const data = localStorage.getItem(STORAGE_KEY) || '[]';
-    const blob = new Blob([data], { type: 'application/json' });
-    const file = new File([blob], 'expense_tracker_backup.json', { type: 'application/json' });
-    
-    const fallbackDownload = () => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'expense_tracker_backup.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('Export downloaded');
-    };
+    try {
+      const raw = loadEntries();
+      if (!raw || raw.length === 0) {
+        showToast('No transactions to export');
+        return;
+      }
+      const payload = createBackupPayload(raw);
+      const dataStr = JSON.stringify(payload, null, 2);
+      const filename = getBackupFilename();
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const file = new File([blob], filename, { type: 'application/json' });
 
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try {
-        await navigator.share({
-          files: [file],
-          title: 'Expense Tracker Backup',
-        });
-        showToast('Export successful');
-      } catch (err) {
-        if (err.name !== 'AbortError') {
+      const fallbackDownload = () => {
+        try {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast('Export downloaded');
+        } catch (err) {
+          console.error('Download failed:', err);
+          showToast('Failed to download backup');
+        }
+      };
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Money Tracker Backup',
+          });
+          showToast('Export successful');
+        } catch (err) {
+          if (err.name === 'AbortError') {
+            // User cancelled share dialog cleanly
+            return;
+          }
           console.error('Share failed, falling back to download:', err);
           fallbackDownload();
         }
+      } else {
+        fallbackDownload();
       }
-    } else {
-      fallbackDownload();
+    } catch (err) {
+      console.error('Export error:', err);
+      showToast('Export failed');
     }
   }
 
@@ -640,11 +662,12 @@ export default function App() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const data = JSON.parse(ev.target.result);
-        if (!Array.isArray(data)) {
-           showToast('Invalid backup file');
+        const rawJson = JSON.parse(ev.target.result);
+        const txArray = parseBackupData(rawJson);
+        if (!txArray) {
+          showToast('Invalid backup file');
         } else {
-          const { valid, skipped } = validateEntries(data);
+          const { valid, skipped } = validateEntries(txArray);
           if (valid.length === 0) {
             showToast(skipped > 0 ? 'No valid transactions found' : 'Backup contains no transactions');
           } else {
@@ -653,8 +676,12 @@ export default function App() {
           }
         }
       } catch (err) {
-         showToast('Failed to parse backup');
+        showToast('Failed to parse backup');
       }
+      e.target.value = null;
+    };
+    reader.onerror = () => {
+      showToast('Failed to read file');
       e.target.value = null;
     };
     reader.readAsText(file);
