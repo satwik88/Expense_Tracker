@@ -735,8 +735,8 @@ export default function App() {
     }
   }
 
-  // Privacy state for balance display (in-memory only; resets on background / lock)
-  const [balanceHidden, setBalanceHidden] = useState(false)
+  // Privacy state for balance display (masked by default; in-memory only; resets on background / lock)
+  const [balanceHidden, setBalanceHidden] = useState(true)
   const [privacyAuthLoading, setPrivacyAuthLoading] = useState(false)
   const [privacyPinModalOpen, setPrivacyPinModalOpen] = useState(false)
   const [privacyPin, setPrivacyPin] = useState('')
