@@ -11,6 +11,7 @@ import DatePicker from './DatePicker'
 import { User, X, Eye, EyeOff } from "lucide"
 import { toLocalKey, parseLocalKey, todayKey } from './dateUtils'
 import { createBackupPayload, getBackupFilename, parseBackupData } from './exportUtils'
+import { syncNativeTheme } from './nativeTheme'
 
 const STORAGE_KEY = 'mt_entries'
 const THEME_KEY = 'mt_theme'
@@ -243,6 +244,7 @@ export default function App() {
     const resolved = resolveTheme(stored)
     document.documentElement.setAttribute('data-theme', resolved)
     setThemeResolved(resolved)
+    syncNativeTheme(resolved)
   }, [])
 
   // Listen for system theme changes when in system mode
@@ -254,6 +256,7 @@ export default function App() {
         const resolved = mq.matches ? 'dark' : 'light'
         document.documentElement.setAttribute('data-theme', resolved)
         setThemeResolved(resolved)
+        syncNativeTheme(resolved)
       }
     }
     mq.addEventListener('change', handler)
@@ -263,8 +266,10 @@ export default function App() {
   function setTheme(mode) {
     localStorage.setItem(THEME_KEY, mode)
     setThemeStored(mode)
-    document.documentElement.setAttribute('data-theme', resolveTheme(mode))
-    setThemeResolved(resolveTheme(mode))
+    const resolved = resolveTheme(mode)
+    document.documentElement.setAttribute('data-theme', resolved)
+    setThemeResolved(resolved)
+    syncNativeTheme(resolved)
   }
 
   // Set random greeting once on mount
@@ -719,8 +724,10 @@ export default function App() {
       setEntries([])
       setUserName('User')
       setThemeStored('system')
-      document.documentElement.setAttribute('data-theme', resolveTheme('system'))
-      setThemeResolved(resolveTheme('system'))
+      const resetTheme = resolveTheme('system')
+      document.documentElement.setAttribute('data-theme', resetTheme)
+      setThemeResolved(resetTheme)
+      syncNativeTheme(resetTheme)
       setGreeting(getRandomGreeting('User'))
       // The app is empty now — keep the user inside it instead of showing a lock screen.
       setUnlocked(true)
